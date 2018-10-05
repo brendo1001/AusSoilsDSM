@@ -10,4 +10,3 @@ This repository will hopefully deliver a goto resource for perfroming digital so
 
 It is envisaged that this repository will be a public resource where people can both try use the provided resources and submit additional code and documentation. 
 
-Contact: Brendan Malone (brendan.malone@csiro.au)
