@@ -1,0 +1,15 @@
+# Literature
+
+Here is a review of existing methods.
+
+```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '20%'}
+knitr::include_graphics("/home/brendo1001/mywork/myLearning/bookdown-demo/images/titleR.jpg")
+``` 
+
+More words
+
+```{r table}
+knitr::kable(mtcars[1:5, 1:5], caption = "A table caption")
+```
+
+
