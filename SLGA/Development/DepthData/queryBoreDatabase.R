@@ -1,8 +1,29 @@
+#################################
+###  Author : Ross Searle         
+###  Date : Fri Oct 05 14:48:52 2018                      
+###  Project :                 
+#################################
+
 library(DBI)
 library(odbc)
 library(stringr)
+library(RODBC)
+library(raster)
+library(stringr)
+library(rgdal)
 
-file_path <-"C:/Projects/TernLandscapes/Regolith/National Bores.accdb"
+codeRoot <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM'
+dataRoot <- 'G:/Team Drives/SLGA/Data'
+
+source(paste0(codeRoot, '/generalFunctions/GeneralUtils.R'))
+source(paste0(codeRoot, '/generalFunctions/VectorUtils.R'))
+
+rasterOptions(datatype="FLT4S", timer=TRUE, format='GTiff',progress="text",chunksize=1e+08,maxmemory=1e+09, overwrite=TRUE) # maxmemory = max no of cells to read into memory
+
+
+#  Need to run 32 bit version of R to connect to the MS Access database
+
+file_path <- paste0(dataRoot, "/Development/Regolith/National Bores.accdb")
 
 ### THis is a bit of a hack to get rid of records in the locations table without related records in the lith table
 ### I could work out an easy way to do this in SQL
@@ -34,10 +55,9 @@ close(pb)
 
 
 
-#dbListTables(con)
-#dbListFields(con, "Bore_Locations2")
+###  Pull out the first record in the bore logs with the 'clay' keywords and write to a csv
 
-outFileName <- 'c:/temp/ClayDepths.csv'
+outFileName <- paste0(dataRoot, '/Development/ExtraDepths/ClayDepths.csv')
 con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=",file_path,";"))
 
 result <- dbSendQuery(con, "SELECT * FROM Bore_Locations2")
@@ -85,6 +105,79 @@ for (i in 1:nrow(blocs)) {
 
 dbDisconnect(con)
 close(pb)
+
+
+
+## Do a bit of filtering to remove potentially spurious/non useful records
+
+
+clyDF <- read.csv(outFileName)
+nrow(clyDF)
+
+shallowClay <- clyDF[clyDF$layerNum < 4 & clyDF$lowerDepth <= 15 & clyDF$upperDepth <= 5, ]
+#shallowClay <- clyDF[clyDF$layerNum < 4 & clyDF$lowerDepth <= 5, ]
+hist(shallowClay$lowerDepth)
+summary(shallowClay)
+sco <- shallowClay[order(shallowClay$lowerDepth),]
+tail(sco, 20)
+
+coordinates(shallowClay) <- ~Longitude+Latitude
+crs(outcrops) <- CRS("+proj=longlat +datum=WGS84")
+nrow(shallowClay)
+plot(shallowClay)
+
+shpOut <- paste0(dataRoot, '/Development/ExtraDepths/ClayDepths.shp')
+writeShapeFile(shallowClay, shpOut)
+
+
+
+
+
+
+###  Pull out the first record in the bore logs with the 'clay' keywords and write to a csv
+
+outFileName <- paste0(dataRoot, '/Development/ExtraDepths/sandDepths.csv')
+con <- dbConnect(drv = odbc(), .connection_string = paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=",file_path,";"))
+
+result <- dbSendQuery(con, "SELECT * FROM Bore_Locations2")
+blocs <- dbFetch(result)
+
+cat(paste('BID, HydroCode, Longitude, Latitude, layerNum, upperDepth, lowerDepth, Description, \n'), file = outFileName)
+
+pb <- txtProgressBar(min = 0, max = nrow(blocs), style = 3)
+for (i in 1:nrow(blocs)) {
+  
+  bid <- blocs[i,]$HydroID
+  res <- dbSendQuery(con, paste0("SELECT * from Bore_Lith where BoreID = ", bid, " ORDER BY FromDepth"))
+  brecs <- dbFetch(res)
+  if(nrow(brecs) > 0)
+  {
+    #words <- c('clay', 'cly')
+    #clayRecs <- brecs[grep(paste(words, collapse='|'), brecs$Descriptio, ignore.case=TRUE),]
+    
+    
+    clayRecs <- brecs[(str_to_lower(str_trim(brecs$Descriptio)) == 'sand ' ) 
+                      & !is.na(brecs$Descriptio) , ]
+    
+    lyrNums <- which(str_to_lower(str_trim(brecs$Descriptio)) == 'sand ')
+    
+    if(nrow(clayRecs) > 0){
+      
+      cat(paste0(bid, ', ', blocs[i,]$HydroCode, ', ', blocs[i,]$Longitude, ', ', blocs[i,]$Latitude, ', ', lyrNums[1],
+                 ', ', clayRecs[1,]$FromDepth,  ', ', clayRecs[1,]$ToDepth, ', ', clayRecs[1,]$Descriptio,
+                 '\n'), file = outFileName, append = T)
+    }
+  }
+  
+  dbClearResult(res)
+  setTxtProgressBar(pb, i)
+  
+}
+
+dbDisconnect(con)
+close(pb)
+
+
 
 
 
