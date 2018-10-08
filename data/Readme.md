@@ -94,7 +94,7 @@ below in the interactive map made possible through the use of both
     # overlaying on 
     mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_subsoilpH
 
-{% include htmlwidgets/m1.html %}
+{% /includes/htmlwidgets/m1.html %}
 
 References
 ----------

@@ -59,7 +59,7 @@ mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_
 
 ```
 
-{% include htmlwidgets/m1.html %}
+{% /includes/htmlwidgets/m1.html %}
 
 ## References
 
