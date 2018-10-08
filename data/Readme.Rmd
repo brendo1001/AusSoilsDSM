@@ -2,9 +2,12 @@
 title: "Common datasets to use"
 author: "Brendan Malone"
 date: '`r Sys.Date()`'
-output: html_document
-bibliography: /home/brendo1001/mywork/AusSoilDSM/docs/TERN_book/book.bib
-biblio-style: /home/brendo1001/styles/european-journal-of-soil-science.csl
+output:
+  md_document:
+    variant: markdown_github
+#bibliography: /home/brendo1001/mywork/AusSoilDSM/docs/TERN_book/book.bib
+#biblio-style: /home/brendo1001/styles/european-journal-of-soil-science.csl
+always_allow_html: yes
 ---
 <style>
 .html-widget {
@@ -63,16 +66,6 @@ mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_
 
 ```
 
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ## References
 
