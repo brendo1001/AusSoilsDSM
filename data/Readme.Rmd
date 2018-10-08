@@ -12,6 +12,7 @@ output: md_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Common datasets to use
 
 The R language is a very rich resource when it comes to doing statistical analyses. This suits doing digital soil mapping enormously as the process of creating soil maps largely hinges upon developing some sort of geospatial model that relates target variables to environmental data. The _scorpan_ model, first described in @mcbratney_digital_2003 sets out the basis for doing digital soil mapping whereby soil spatial variation is modeled as a function of environmental information including: other soil information, climate, organisms, relief, parent material, age, and spatial position. Soil scientists will pick up on the fact that nearly all these variables coincide with the factors of soil formation that were identified and described in @jenny_factors_1941. This is true, but the _scorpan_ model can be thought of as the empirical model for what @jenny_factors_1941 conceptually defined. With the _scorpan_ model we can retrieved available spatial data that correspond to or can be used as proxies for those above described factors of soil formation. With such data and coupled with soil observations, we can begin to develop some empirical models about what the likely variation of soil is across a given spatial domain.
 
@@ -25,6 +26,8 @@ library(devtools)
 install_bitbucket("brendo1001/ithir/pkg") # download and install
 library(ithir) # load
 ```
+
+### Continuous variables
 
 For continuous variables the data to use is `data(HV_subsoilpH)`, which is a collection of 506 soil pH observations from the Hunter Valley region of NSW. The associated environmental covariates are `data(hunterCovariates_sub)` which is a stack of raster data coincidong mainly with information derived from an avaailble 25m digital enlevation model that has continous coverage in the spatial domain where the soil observations were collected from.  
 
@@ -59,7 +62,8 @@ mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_
 
 ```
 
-{% /includes/htmlwidgets/m1.html %}
+### Categorical variables
+
 
 ## References
 

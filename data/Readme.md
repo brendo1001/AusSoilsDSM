@@ -1,3 +1,6 @@
+Common datasets to use
+----------------------
+
 The R language is a very rich resource when it comes to doing
 statistical analyses. This suits doing digital soil mapping enormously
 as the process of creating soil maps largely hinges upon developing some
@@ -32,6 +35,8 @@ follows:
     ## library(devtools)
     ## install_bitbucket("brendo1001/ithir/pkg") # download and install
     library(ithir) # load
+
+### Continuous variables
 
 For continuous variables the data to use is `data(HV_subsoilpH)`, which
 is a collection of 506 soil pH observations from the Hunter Valley
@@ -94,7 +99,7 @@ below in the interactive map made possible through the use of both
     # overlaying on 
     mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_subsoilpH
 
-{% /includes/htmlwidgets/m1.html %}
+### Categorical variables
 
 References
 ----------
