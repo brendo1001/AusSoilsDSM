@@ -258,6 +258,8 @@ colnames(trainSet) <- colnames(modDF2)
 colnames(validSet) <- colnames(modDF2)
 
 
+write.csv(trainSet, 'c:/temp/rf.csv')
+
 Rmodel <- ranger(trainSet[,1] ~ ., data = trainSet[,-1], write.forest = TRUE, importance = 'impurity', num.trees = 500)
 
 mvals <- predict(Rmodel, validSet[,-1])
@@ -274,4 +276,7 @@ MapRF(att=att, model = Rmodel, templateR = templateR, cpus = 7, theStack = stk, 
 
 
 
+require(ranger)
 
+## Classification forest with default settings
+ranger(Species ~ ., data = iris)
