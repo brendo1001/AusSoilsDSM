@@ -16,11 +16,13 @@ library(rasterVis)
 library(data.table)
 library(ithir)
 library(ranger)
+library(Cubist)
 
 source('DSMToolsConfig.R')
 source('Utils/GeneralUtils.R')
 source('Utils/VectorUtils.R')
 source('Utils/ModelUtils.R')
+source('Utils/MapCubistModels.R')
 
 
 
@@ -138,7 +140,7 @@ ui <- tagList(fluidPage(
                         ),
                         mainPanel(
                           withSpinner(plotOutput("ModelPlot", width = "450", height = "350")),
-                          leafletOutput("RunModelMap", width = "650", height = "450")
+                          withSpinner(leafletOutput("RunModelMap", width = "650", height = "450"))
                           
                         )
                       )
@@ -167,31 +169,57 @@ server <- function(input, output, session) {
   RV$ModelSampleFileData = NULL
   RV$CurrentModel = NULL
   RV$ModelData = NULL
-  RV$RunModel = F
+  RV$CurrentModelRaster = NULL
   
-  observeEvent(input$RunModelBtn, {
+  
+  output$RunModelMap <- renderLeaflet({
     
     
-    # req(RV$ModelSampleFileData)
+    
+    req( RV$CurrentModelRaster)
+    
+    # model <- RV$CurrentModel$Model
+    # print("Mapping Model")
     # 
-    # if (input$RunModelBtn > 0)
-    #   
-    #   RV$RunModel <- T
+    # covDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Covariates' )
+    # covpaths <- list.files( paste0(covDir), pattern = paste0('[a-zA-Z0-9\\/_:-]*', '.tif$'), full.names = T, recursive =F)
+    # stk <- stack(covpaths)
+    # templateR <- stk[[1]]
+    # outRaster <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/', 'model', '.tif' )
+    # outdir <- dirname(outRaster)
+    # rName <- basename(outRaster)
+    # withoutext <- str_split(rName, '\\.')[[1]][1]
+    # 
+    # scratchDir <- paste0(outdir, '/scratch_', withoutext)
+    # print(scratchDir)
+    # createDirectory(scratchDir)
     
+    # modelR <- makeMapParra(model=model, templateR, stk, outRasterName=outRaster, numCPUs=NULL, tidyUp=F)
+    modelR <- RV$CurrentModelRaster
+    pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(modelR), na.color = "transparent")
+    leaflet() %>%
+      addProviderTiles("Esri.WorldImagery", options = providerTileOptions(noWrap = TRUE), group = "Satelite Image") %>%
+      addRasterImage(modelR, colors = pal, opacity = 0.8)
+    
+  })
+  
+  
+  ### Run the model
+  observe({
     
     
   })
   
   output$ModelPlot <- renderPlot({
     
-    #req( RV$CurrentModel$Model)
+    
+    
     if (input$RunModelBtn > 0){
+      print("Running Model")
       
-      if(input$MLType == 'Cubist'){
-        session$sendCustomMessage(type = 'testmessage', message = 'Cubist model is not implemented at the moment')
-      }else{
+      isolate({
         
-        spls <-  RV$CurrentSplineFile 
+        spls <-  RV$CurrentSplineFile
         
         svals <- spls$harmonised['0-5 cm']
         ids <- spls$harmonised['id']
@@ -215,69 +243,86 @@ server <- function(input, output, session) {
         
         colnames(modDF2)[1] <- 'inVals'
         
-        
-        
         splitSamples <-createTrainingSample(modDF2, 1, 66)
         
-        trainset <- as.data.frame(splitSamples[1])
-        print(head(trainset))
+        trainSet <- as.data.frame(splitSamples[1])
+        
         validSet <- as.data.frame(splitSamples[2])
-        colnames(trainset) <- colnames(modDF2)
+        colnames(trainSet) <- colnames(modDF2)
         colnames(validSet) <- colnames(modDF2)
         
+        #MLmodel <- ranger::ranger(inVals ~ ., data = trainset, write.forest = T, importance = 'impurity', num.trees = 500)
         
-        Rmodel <- ranger::ranger(inVals ~ ., data = trainset, write.forest = T, importance = 'impurity', num.trees = 500)
+        MLmodel <- cubist(x = trainSet[,-1], y = trainSet[,1], committees=1,  cubistControl( label = att, rules = 5))
+        print(summary(MLmodel))
         
-        
-        mvals <- predict(Rmodel, validSet[,-1])
-        mfit <- data.frame(validSet[,1], mvals$predictions)
+        mvals <- predict(MLmodel, validSet[,-1])
+        mfit <- data.frame(validSet[,1], mvals)
         colnames(mfit) <- c('obs', 'mod')
         
+        stk <- stack(covpaths)
+        templateR <- stk[[1]]
+        outRaster <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/', 'model', '.tif' )
+        outdir <- dirname(outRaster)
+        rName <- basename(outRaster)
+        withoutext <- str_split(rName, '\\.')[[1]][1]
         
-        RV$CurrentModel$Model <- Rmodel
-        RV$CurrentModel$ValidSet <- mfit
-      }
+        scratchDir <- paste0(outdir, '/scratch_', withoutext)
+        print(scratchDir)
+        createDirectory(scratchDir)
+        # 
+        print(templateR)
+        print(stk)
+        modelR <- makeMapParra(model=MLmodel, templateR, stk, outRasterName=outRaster, numCPUs=NULL, tidyUp=F)
+        
+        RV$CurrentModelRaster <- modelR
+        
+        
+        
+        
+        
+        
+        obsVal <- mfit[,1]
+        modelVal <- mfit[,2]
+        
+        cccC <- epi.ccc(obsVal, modelVal, ci = "z-transform",conf.level = 0.95)
+        r.sqC <- cor(obsVal, modelVal)^2
+        
+        fitC <- lm(modelVal ~ obsVal-1, data=mfit)
+        validC = data.frame(obsVal, modelVal)
+        
+        totAp <- sum(obsVal)
+        totS <- sum(modelVal)
+        prop <- totAp/totS
+        
+        minVal = 0
+        maxX = max(obsVal)
+        maxY = max(modelVal)
+        maxVal = max(maxX, maxY)
+      })
       
       
       
+      RV$CurrentModel <- MLmodel
       
-      
-      
-      dfn <- RV$CurrentModel$ValidSet
-      obsVal <- dfn[,1]
-      modelVal <- dfn[,2]
-      
-      cccC <- epi.ccc(obsVal, modelVal, ci = "z-transform",conf.level = 0.95)
-      r.sqC <- cor(obsVal, modelVal)^2
-      
-      fitC <- lm(modelVal ~ obsVal-1, data=dfn)
-      validC = data.frame(obsVal, modelVal)
-      
-      totAp <- sum(obsVal)
-      totS <- sum(modelVal)
-      prop <- totAp/totS
-      
-      minVal = 0
-      maxX = max(obsVal)
-      maxY = max(modelVal)
-      maxVal = max(maxX, maxY)
-      
-      
-      plot(validC, main=paste( 'Model Fit' ), xlab='Observed', ylab = 'Predicted', pch=3, cex =0.5, xlim = c(minVal,maxVal), ylim = c(minVal,maxVal))
-      abline(fitC, col="red")
-      abline(0,1, col="green")
-      #mtext(subtitle, cex=0.5)
-      
-      tx =  maxVal *0.6
-      ty1 =  maxVal * 0.05
-      ty2 =  maxVal * 0.15
-      
-      legPos = 'topright'
-      legend(legPos, c('Regression Line', '1:1') , lty=1, col=c('red','green'), bty='n', cex=1)
-      
-      text(tx,ty1, paste("R2 = ",round(r.sqC, digits = 2)), pos=4)
-      text(tx,ty2, paste("LCCC = ", round(cccC$rho.c[,1], digits = 2)), pos=4)
-      
+      isolate({
+        
+        plot(validC, main=paste( 'Model Fit' ), xlab='Observed', ylab = 'Predicted', pch=3, cex =0.5, xlim = c(minVal,maxVal), ylim = c(minVal,maxVal))
+        abline(fitC, col="red")
+        abline(0,1, col="green")
+        #mtext(subtitle, cex=0.5)
+        
+        tx =  maxVal *0.6
+        ty1 =  maxVal * 0.05
+        ty2 =  maxVal * 0.15
+        
+        legPos = 'topright'
+        legend(legPos, c('Regression Line', '1:1') , lty=1, col=c('red','green'), bty='n', cex=1)
+        
+        text(tx,ty1, paste("R2 = ",round(r.sqC, digits = 2)), pos=4)
+        text(tx,ty2, paste("LCCC = ", round(cccC$rho.c[,1], digits = 2)), pos=4)
+        
+      })
     }
     
   })
@@ -405,7 +450,6 @@ server <- function(input, output, session) {
     req(RV$CurrentSplineFile)
     
     
-    print('SPLINE')
     spls <- RV$CurrentSplineFile
     
     stdDeps <- c('2.5', '10', '22.5', '45', '80', '150')
@@ -460,7 +504,6 @@ server <- function(input, output, session) {
       
       sampDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples' )
       outPath <- paste0(sampDir, '/', sampName, '.csv')
-      print(outPath)
       file.copy(input$sampleFile$datapath, outPath)
     })
     
@@ -481,7 +524,7 @@ server <- function(input, output, session) {
                        stringsAsFactors = F)
         
         stddf <- df[with(df, order(sid, Attribute, UpperDepth)),]
-        print(head(stddf, 10))
+        
         RV$SampleFields <- stddf
         
         atts <- unique(stddf$Attribute)
@@ -496,9 +539,6 @@ server <- function(input, output, session) {
           saveRDS(sp.fit, paste0(spDir, '/', att, '_spline.rds'))
           
         }
-        
-        
-        
         
         rhandsontable(df,  height = 600, manualColumnResize = T, readOnly = TRUE, rowHeaders = F) 
       },
@@ -593,6 +633,7 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
 
 
 

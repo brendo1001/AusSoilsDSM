@@ -259,6 +259,8 @@ colnames(validSet) <- colnames(modDF2)
 
 
 write.csv(trainSet, 'c:/temp/rf.csv')
+write.csv(validSet, 'c:/temp/rf_valid.csv')
+
 
 Rmodel <- ranger(trainSet[,1] ~ ., data = trainSet[,-1], write.forest = TRUE, importance = 'impurity', num.trees = 500)
 
@@ -276,7 +278,86 @@ MapRF(att=att, model = Rmodel, templateR = templateR, cpus = 7, theStack = stk, 
 
 
 
-require(ranger)
 
-## Classification forest with default settings
-ranger(Species ~ ., data = iris)
+library(Cubist)
+trainSet <- read.csv('c:/temp/rf.csv')
+validSet <- read.csv('c:/temp/rf_valid.csv')
+Cmodel <- cubist(x = trainSet[,-1], y = trainSet[,1], committees=1,  cubistControl( label = 'clay', rules = 5))
+summary(Cmodel)
+Cmv <- predict(Cmodel, validSet[,-1])
+Ctdf <- data.frame(validSet[,1], Cmv)
+
+fitStats(Ctdf[1],Ctdf[2], paste0('Surface Clay - Cubist'),  paste0(RmodelFilename, '_ModelStats.txt'), 'topleft', verbose = T)
+
+outRaster <- 'C:/temp/clay.tif'
+templateR <- raster('C:/Projects/Myanmar/ShinyDeploy/Demo/Development/Covariates/rad_k.tif')
+
+
+
+modelR <- makeMapParra(model=Cmodel, templateR, stk, outRaster, numCPUs=NULL, tidyUp=T)
+
+
+
+
+library(doParallel)
+library(doSNOW)
+
+makeMapParra <- function(model, templateR, stk, outRasterName, numCPUs=NULL, minBlocks=NULL, tidyUp=T){
+  
+  ptm <- proc.time()
+  
+  outdir <- dirname(outRasterName)
+  rName <- basename(outRasterName)
+  withoutext <- str_split(rName, '\\.')[[1]][1]
+  
+  scratchDir <- paste0(outdir, '/scratch_', withoutext)
+  if(!file.exists(scratchDir)){dir.create(scratchDir)}
+  unlink(paste0(scratchDir, "/*"))
+  
+  covNamesinModel<- getCovariatesUsedInModel(model)
+  
+  if(is.null(numCPUs)){
+    numCPUs = detectCores()-1
+  }
+  
+  cat(paste0('Using ', numCPUs, ' cores'), sep='\n')
+  
+  if(is.null(minBlocks)){
+    mblocks = numCPUs
+  }else{
+    mblocks = minBlocks
+  }
+  
+  bs <- blockSize(stk, minblocks = mblocks)
+  saveRDS(bs, paste0(scratchDir, '/brickInfo.rds'))
+  cat(paste0('Using ', bs$n, ' blocks'), sep='\n')
+  cl <- makeSOCKcluster(numCPUs)
+  registerDoSNOW(cl)
+  
+  pb <- txtProgressBar(max=bs$n, style=3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress=progress)
+  r <- foreach(k=1:bs$n, .options.snow=opts, .packages=c('raster','rgdal', 'Cubist'), .export = c('applyMapParallel2')) %dopar% applyMapParallel2(model, templateR, stk, scratchDir, bs, covNamesinModel)
+  close(pb)
+  stopCluster(cl)
+  
+  
+  # cl<-makeCluster(detectCores(),outfile="")
+  # registerDoParallel(cl)
+  # foreach(k=1:bs$n,  .packages=c('raster','rgdal', 'Cubist'), .export = c('applyMapParallel2')) %dopar% applyMapParallel2(model, templateR, stk, scratchDir, bs, covNamesinModel)
+  
+  
+  oRast <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=outRasterName)
+  
+  
+  if(tidyUp){
+    unlink(scratchDir, recursive = T)
+  }
+  print(proc.time() - ptm)
+  
+  plot(oRast, maxpixels = 100000)
+  return(oRast)
+  
+  
+}
+
