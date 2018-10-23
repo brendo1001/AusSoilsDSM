@@ -40,13 +40,16 @@ unique(df$SAMPLETYPE)
 
 outcrops <- df[df$SAMPLETYPE == 'outcrop sample', ]
 nrow(outcrops)
-coordinates(outcrops) <- ~SAMPLE_LONGITUDE+SAMPLE_LATITUDE
-crs(outcrops) <- CRS("+proj=longlat +datum=WGS84")
 
-plot(outcrops)
 
+head(outcrops)
 uro <- unique(outcrops[,c('SAMPLE_LATITUDE', 'SAMPLE_LONGITUDE', 'PROPERTY', 'SAMPLINGDATE', 'LOCATIONACCURACY_M', 'LOCATIONMETHOD')])
 nrow(uro)
+
+spOutcrops <- outcrops
+coordinates(spOutcrops) <- ~SAMPLE_LONGITUDE+SAMPLE_LATITUDE
+crs(spOutcrops) <- CRS("+proj=longlat +datum=WGS84")
+plot(spOutcrops)
 
 
 spuro <- uro
@@ -57,6 +60,8 @@ crs(spuro) <- CRS("+proj=longlat +datum=WGS84")
 writeShapeFile(spuro, 'C:/Projects/TernLandscapes/Regolith/GARockDatabase/GA_Outcrops.shp')
 write.csv(uro, 'C:/Projects/TernLandscapes/Regolith/GARockDatabase/GA_Outcrops.csv')
 
+
+# not used as yet but need to check if Json downloads deliver more than 100k rows
 
 
 library(RCurl)
