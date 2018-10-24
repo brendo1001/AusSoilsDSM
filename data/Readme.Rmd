@@ -3,8 +3,9 @@ title: "Common datasets to use"
 author: "Brendan Malone"
 date: '`r Sys.Date()`'
 output: md_document
-#bibliography: /home/brendo1001/mywork/AusSoilDSM/docs/TERN_book/book.bib
-#biblio-style: /home/brendo1001/styles/european-journal-of-soil-science.csl
+always_allow_html: yes
+bibliography: /home/brendo1001/mywork/AusSoilDSM/docs/TERN_book/book.bib
+biblio-style: /home/brendo1001/styles/european-journal-of-soil-science.csl
 ---
 
 
@@ -43,7 +44,7 @@ hunterCovariates_sub
 
 To get a sense of where these data come from, they can be visualised below in the interactive map made possible through the use of both `mapview` and `sf` R packages. 
 
-```{r map,echo=TRUE, eval=FALSE,out.height='15cm',out.width='20cm',fig.align="center"}
+```{r map,echo=TRUE, eval=TRUE,out.height='15cm',out.width='20cm',fig.align="center"}
 library(mapview);library(sf)
 
 # coerce to a spatial object

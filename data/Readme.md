@@ -5,20 +5,20 @@ The R language is a very rich resource when it comes to doing
 statistical analyses. This suits doing digital soil mapping enormously
 as the process of creating soil maps largely hinges upon developing some
 sort of geospatial model that relates target variables to environmental
-data. The *scorpan* model, first described in @mcbratney\_digital\_2003
-sets out the basis for doing digital soil mapping whereby soil spatial
-variation is modeled as a function of environmental information
-including: other soil information, climate, organisms, relief, parent
-material, age, and spatial position. Soil scientists will pick up on the
-fact that nearly all these variables coincide with the factors of soil
-formation that were identified and described in @jenny\_factors\_1941.
-This is true, but the *scorpan* model can be thought of as the empirical
-model for what @jenny\_factors\_1941 conceptually defined. With the
-*scorpan* model we can retrieved available spatial data that correspond
-to or can be used as proxies for those above described factors of soil
-formation. With such data and coupled with soil observations, we can
-begin to develop some empirical models about what the likely variation
-of soil is across a given spatial domain.
+data. The *scorpan* model, first described in McBratney, Mendonca
+Santos, and Minasny (2003) sets out the basis for doing digital soil
+mapping whereby soil spatial variation is modeled as a function of
+environmental information including: other soil information, climate,
+organisms, relief, parent material, age, and spatial position. Soil
+scientists will pick up on the fact that nearly all these variables
+coincide with the factors of soil formation that were identified and
+described in Jenny (1941). This is true, but the *scorpan* model can be
+thought of as the empirical model for what Jenny (1941) conceptually
+defined. With the *scorpan* model we can retrieved available spatial
+data that correspond to or can be used as proxies for those above
+described factors of soil formation. With such data and coupled with
+soil observations, we can begin to develop some empirical models about
+what the likely variation of soil is across a given spatial domain.
 
 R has a very rich ecosystem of potential models that could be exploited
 in the process of doing digital soil mapping (fitting the models bit).
@@ -85,6 +85,8 @@ below in the interactive map made possible through the use of both
 
     library(mapview);library(sf)
 
+    ## Linking to GEOS 3.6.2, GDAL 2.2.3, proj.4 4.9.3
+
     # coerce to a spatial object
     HV_subsoilpH <- st_as_sf(
       HV_subsoilpH, 
@@ -95,11 +97,30 @@ below in the interactive map made possible through the use of both
     r1<- hunterCovariates_sub[[1]]
     r1
 
+    ## class       : RasterLayer 
+    ## dimensions  : 249, 210, 52290  (nrow, ncol, ncell)
+    ## resolution  : 25, 25  (x, y)
+    ## extent      : 338422.3, 343672.3, 6364203, 6370428  (xmin, xmax, ymin, ymax)
+    ## coord. ref. : +proj=utm +zone=56 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs 
+    ## data source : in memory
+    ## names       : Terrain_Ruggedness_Index 
+    ## values      : 0.194371, 15.94532  (min, max)
+
     # create the map with point data and a raster layer
     # overlaying on 
     mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_subsoilpH
+
+    ## TypeError: Attempting to change the setter of an unconfigurable property.
+    ## TypeError: Attempting to change the setter of an unconfigurable property.
+
+<img src="Readme_files/figure-markdown_strict/map-1.png" width="20cm" height="15cm" style="display: block; margin: auto;" />
 
 ### Categorical variables
 
 References
 ----------
+
+Jenny, H. 1941. *Factors of Soil Formation*. New York: McGraw-Hill.
+
+McBratney, A B, M L Mendonca Santos, and B Minasny. 2003. “On Digital
+Soil Mapping.” *Geoderma* 117: 3–52.
