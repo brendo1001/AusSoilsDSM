@@ -110,8 +110,6 @@ below in the interactive map made possible through the use of both
     # overlaying on 
     mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_subsoilpH
 
-    ## TypeError: Attempting to change the setter of an unconfigurable property.
-    ## TypeError: Attempting to change the setter of an unconfigurable property.
 
 <img src="Readme_files/figure-markdown_strict/map-1.png" width="20cm" height="15cm" style="display: block; margin: auto;" />
 
