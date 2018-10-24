@@ -111,7 +111,7 @@ below in the interactive map made possible through the use of both
     mapview(r1,map.types="Esri.WorldImagery", legend=FALSE, use.layer.names=T) + HV_subsoilpH
 
 
-<img src="Readme_files/figure-markdown_strict/map-1.png" width="20cm" height="15cm" style="display: block; margin: auto;" />
+<img src="https://github.com/brendo1001/AusSoilsDSM/tree/master/data/Readme_files/figure-markdown_strict/map-1.png" width="20cm" height="15cm" style="display: block; margin: auto;" />
 
 ### Categorical variables
 
