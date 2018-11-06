@@ -40,6 +40,16 @@ format(round(x, 2), nsmall = 2)
 
 
 
+a <- c('Ross', 'Searle', 'Ben', 'boy')
+m <- c('Ross', 'Be', 'se')
+
+match(a, m)
+
+a %in% m
+
+unlist(sapply(m, grep, a, USE.NAMES = F, ignore.case = T ))
+
+
 rsum <- paste0('dimensions  : ', dim(r)[1], ' ',dim(r)[2], ' ', dim(r)[1] * dim(r)[2],  ' (nrow, ncol, ncell) \n')
 rsum <- paste0(rsum, 'resolution  : ',format(round(res(r)[1], 5), nsmall = 2) , ' ',format(round(res(r)[2], 5), nsmall = 2), ' (x, y) \n')
 rsum <- paste0(rsum, 'extent      : ', format(round(extent(r)[1], 5), nsmall = 2), ' ',format(round(extent(r)[2], 5), nsmall = 2), ' ', format(round(extent(r)[3], 5), nsmall = 2), ' ', format(round(extent(r)[4], 5), nsmall = 2), '    (xmin, xmax, ymin, ymax) \n')
@@ -360,4 +370,155 @@ makeMapParra <- function(model, templateR, stk, outRasterName, numCPUs=NULL, min
   
   
 }
+
+
+
+
+
+
+###############################   covariate preperation    #########
+
+
+templateR <- raster('C:/Temp/clusters.tif')
+
+
+inR <- raster('C:/Temp/climtest.tif')
+
+templateProj <- crs(templateR)
+
+#if(!compareRaster(templateR, inR, stopiffalse=F)){
+
+    if(!compareCRS(templateR, inR)){
+      inR2 <- projectRaster(inR, crs=templateProj,method="ngb")
+    }else{
+      inR2 <- inR
+    }
+
+if(!compareRaster(templateR, inR, stopiffalse = F, exten = T, rowcol = T, res = T, orig = T)){
+  
+  inR3 <- resample(inR2, templateR)
+}else{
+  inR3 <- inR2
+}
+
+
+inR4 <- mask(inR3, templateR)
+plot(inR4)
+
+
+r <- templateR
+outR <- r^as.numeric(2)
+outR <- exp(r)
+outR <- log(r, 30)
+outR <- cos(r)
+
+filename(r)
+
+is.numeric(as.numeric(NULL))
+
+
+a <- as.numeric(' ')
+
+if(is.na(a)){
+  diag
+}else{
+  
+}
+is.null(NULL)
+
+
+
+setwd('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools')
+getwd()
+rootDir <- 'Data'
+currentUser <- 'Demo'
+
+state <- read.csv(paste0(rootDir, '/', currentUser, '/state.cfg'), sep = "=", header = F )
+previousProj <- as.character(state[1,2])
+
+
+
+
+
+
+mydf <- read.csv('C:/Projects/Myanmar/MarkData/20181018-PYB_data.csv')  
+mydf[mydf == -9999] <- NA
+mydf2 <- Filter(is.numeric, mydf)
+
+do.call(cbind, lapply(mydf2, summary))
+
+dfs <- data.frame(Stat=names(s), Value=as.numeric(s[1:7]), stringsAsFactors = F)
+vad <- length(which(!is.na(mydf2$pH_H2O)))
+dfs[8,] <- c('# Vals', vad)
+
+s <- summary(mydf2$pH_H2O)
+
+sl <- lapply(mydf$pH_H2O, summary)
+
+Filter(is.numeric, mydf)
+
+
+
+r <- raster('C:/Projects/Myanmar/MarkData/Convergence_060.tif')
+r
+
+df <- read.csv('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/Demo/dev1/Samples/20181018-PYB_data.csv')
+str(df)
+sdf <- unique(df[c("SiteID", "Easting", "Easting")])
+head(sdf)
+coordinates(sdf) <- ~Easting+Northing
+crs(sdf) <- crs('+proj=utm +zone=46 +ellps=WGS84 +units=m +no_defs ')
+psdf <- spTransform(sdf, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+
+plot(psdf)
+
+f <-'RockFrag'
+df[f]
+
+
+
+
+
+
+
+germG <- spTransform(mapG, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+
+
+
+if (interactive()) {
+  
+  demoAirDatepicker("datepicker")
+  
+}
+
+
+model <- readRDS('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/Demo/Myanmar/Outputs/20181018-PYB_data_SiteID_5/model_20181018-PYB_data_SiteID_5.rds')
+
+ms <- summary(model)
+
+cat(ms$output, file = 'c:/temp/am.txt')
+
+x <- model$model
+cat(x, 'c:/temp/amodel.txt')
+
+read.table(text=x,col.names=c('ID','Name'))
+model$output
+model$control
+model$caseWeights
+model$maxd
+model$dims
+model$splits
+str(model$usage)
+model$vars
+
+
+
+inTable <- read.csv('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/Demo/Myanmar/Outputs/20181018-PYB_data!SiteID!5/Model!20181018-PYB_data!SiteID!5!ExternalValidation.csv')
+
+round(mean(inTable$R2), 2)
+
+
+
 

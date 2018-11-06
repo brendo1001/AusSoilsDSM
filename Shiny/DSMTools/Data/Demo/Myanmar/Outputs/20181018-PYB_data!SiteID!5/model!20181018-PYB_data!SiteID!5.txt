@@ -1,0 +1,123 @@
+
+Cubist [Release 2.07 GPL Edition]  Tue Nov 06 09:27:23 2018
+---------------------------------
+
+    Target attribute `outcome'
+
+Read 4800 cases (6 attributes) from undefined.data
+
+Model:
+
+  Rule 1: [1002 cases, mean 1359.5, range 1000 to 1958, est err 215.4]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA > 176.3513
+	DEM_SRTM_Mask_filled_SAGA <= 291.5158
+	MRRTF_16 <= 1
+	Slope > 0.3863128
+    then
+	outcome = 728.4 + 2.94 DEM_SRTM_Mask_filled_SAGA - 75 MRRTF_16
+	          + 7.6 Slope - 0.35 Aspect
+
+  Rule 2: [828 cases, mean 1431.3, range 1003 to 1979, est err 218.5]
+
+    if
+	Aspect > 15.4994
+	DEM_SRTM_Mask_filled_SAGA > 176.3513
+	DEM_SRTM_Mask_filled_SAGA <= 254.4191
+	MRRTF_16 > 1
+	Slope > 0.3863128
+    then
+	outcome = 1472 - 12.9 Slope - 0.33 Aspect
+
+  Rule 3: [102 cases, mean 1443.6, range 1043 to 1976, est err 206.1]
+
+    if
+	Aspect <= 15.4994
+	DEM_SRTM_Mask_filled_SAGA > 176.3513
+	DEM_SRTM_Mask_filled_SAGA <= 340.3812
+    then
+	outcome = 2578.5 - 28.03 Aspect - 3.29 DEM_SRTM_Mask_filled_SAGA
+
+  Rule 4: [150 cases, mean 1444.2, range 1005 to 1962, est err 236.2]
+
+    if
+	Aspect <= 81.30925
+	DEM_SRTM_Mask_filled_SAGA > 340.3812
+    then
+	outcome = 905.5 - 7.24 Aspect + 2.11 DEM_SRTM_Mask_filled_SAGA
+
+  Rule 5: [558 cases, mean 1445.6, range 1009 to 1969, est err 274.9]
+
+    if
+	Aspect > 81.30925
+	DEM_SRTM_Mask_filled_SAGA > 340.3812
+    then
+	outcome = 1734.6 - 0.91 DEM_SRTM_Mask_filled_SAGA + 5.7 Slope
+	          - 28 MRRTF_16 - 0.25 Aspect
+
+  Rule 6: [252 cases, mean 1451.7, range 1060 to 1974, est err 137.2]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA > 176.3513
+	MRRTF_16 > 2
+	Slope <= 0.3863128
+    then
+	outcome = -1070.4 + 892.6 Slope + 13.05 DEM_SRTM_Mask_filled_SAGA
+	          - 1.98 Aspect
+
+  Rule 7: [498 cases, mean 1487.5, range 1025 to 1913, est err 203.0]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA > 254.4191
+	DEM_SRTM_Mask_filled_SAGA <= 291.5158
+	MRRTF_16 > 1
+    then
+	outcome = 4133.6 - 11.08 DEM_SRTM_Mask_filled_SAGA + 71.5 Slope
+	          + 82 MRRTF_16
+
+  Rule 8: [456 cases, mean 1495.2, range 1150 to 1948, est err 120.5]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA <= 176.3513
+    then
+	outcome = -3410.6 + 28.6 DEM_SRTM_Mask_filled_SAGA + 0.51 Aspect
+
+  Rule 9: [678 cases, mean 1591.0, range 1083 to 1957, est err 190.7]
+
+    if
+	Aspect > 15.4994
+	DEM_SRTM_Mask_filled_SAGA > 291.5158
+	DEM_SRTM_Mask_filled_SAGA <= 340.3812
+    then
+	outcome = 2999.8 - 3.94 DEM_SRTM_Mask_filled_SAGA - 0.24 Aspect
+	          + 0.5 Slope
+
+  Rule 10: [312 cases, mean 1623.6, range 1058 to 1944, est err 132.3]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA > 176.3513
+	MRRTF_16 <= 2
+	Slope <= 0.3863128
+    then
+	outcome = 2407.9 + 1604.4 Slope - 5.01 DEM_SRTM_Mask_filled_SAGA
+	          - 181 MRRTF_16 - 0.13 Aspect
+
+
+Evaluation on training data (4800 cases):
+
+    Average  |error|               89.0
+    Relative |error|               0.35
+    Correlation coefficient        0.82
+
+
+	Attribute usage:
+	  Conds  Model
+
+	  100%    83%    DEM_SRTM_Mask_filled_SAGA
+	   60%    49%    MRRTF_16
+	   50%    85%    Slope
+	   48%    90%    Aspect
+
+
+Time: 0.1 secs

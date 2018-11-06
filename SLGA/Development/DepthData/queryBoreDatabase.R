@@ -114,7 +114,8 @@ close(pb)
 clyDF <- read.csv(outFileName)
 nrow(clyDF)
 
-shallowClay <- clyDF[clyDF$layerNum < 4 & clyDF$lowerDepth <= 15 & clyDF$upperDepth <= 5, ]
+shallowClay <- clyDF[clyDF$layerNum < 4 & clyDF$lowerDepth <= 5 & clyDF$upperDepth <= 5, ]
+nrow(shallowClay)
 #shallowClay <- clyDF[clyDF$layerNum < 4 & clyDF$lowerDepth <= 5, ]
 hist(shallowClay$lowerDepth)
 summary(shallowClay)
