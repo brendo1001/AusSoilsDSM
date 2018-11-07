@@ -8,7 +8,7 @@ library(shiny)
 library(shinyjs)
 library(shinyalert)
 library(shinyWidgets)
-library(mapview)
+#library(mapview)
 library(gstat)
 library(sp)
 library(shinycssloaders)
@@ -17,7 +17,7 @@ library(plotKML)
 library(rgeos)
 library(rasterVis)
 library(data.table)
-library(ithir)
+#library(ithir)
 library(ranger)
 library(Cubist)
 
@@ -26,6 +26,7 @@ source('mylibs/GeneralUtils.R')
 source('mylibs/VectorUtils.R')
 #source('mylibs/ModelUtils.R')
 source('mylibs/MapCubistModels.R')
+source('mylibs/ithirSub.R')
 source("helpers.R")
 
 
@@ -66,14 +67,27 @@ ui <- tagList(fluidPage(
   navbarPage("", id = "inTabset", 
              
              tabPanel("Select a Project",  icon = icon("list-ul"),
-                      
-                  fluidPage(
+                    
+                    sidebarLayout(
+                      sidebarPanel(width = 3, 
+                                   wellPanel(HTML('<p style="color:blue;font-weight: bold;">Project Management</p>'),
+                                             fluidRow(selectInput('currentProject', 'Select a Project to Use', choices = NULL)),
+                                             fluidRow( actionButton('AddNewProject', "Create New Project"), br(), br(), br()),
+                                             fluidRow( actionButton('DeleteProject', "Delete Project")),
+                                             fluidRow( actionButton('RenameProject', "Rename Project"))
+                                             )
+                      ),
+                      mainPanel(
+                        fluidPage(
+                          fluidRow( HTML('<H1><p style="color:blue;font-weight: bold;">Project Information</p></H1>')),
+                        fluidRow(br(), br()),
                         
-                        fluidRow(br(), br(), br(), br(), br()),
-                        fluidRow( column(4), column(8,selectInput('currentProject', 'Select a Project to Use', choices = NULL))),
-                        fluidRow( column(4), column(8,actionButton('AddNewProject', "New Project"))),
-                        fluidRow( column(4), column(8,actionButton('DeleteProject', "Delete Project"))),
-                        fluidRow( column(4), column(8,actionButton('RenameProject', "Rename Project")))
+                        fluidRow(htmlOutput('projectInfoText'))
+                      )
+                    )
+                        
+                        
+                        
                   )      
              ),
              
@@ -82,31 +96,7 @@ ui <- tagList(fluidPage(
                       tabsetPanel(id = "inCovariateTabset", 
                                   
                                   
-                                  tabPanel("Explore Covariates",
-                                           sidebarLayout(
-                                             sidebarPanel(width = 2,
-                                                          #HTML('<p  style="color:blue;font-weight: bold;">Currently Available Project Covariates</p>'),
-                                                          selectInput('availCovList', 'Available Covariates', choices=NULL, multiple=F),
-                                                          #actionButton('DeleteCov', "Delete Covariate"),
-                                                          
-                                                          HTML('<H4>Transform Values</H4>'),
-                                                          wellPanel( selectInput('transformCovType', 'Transformation Type', choices=c('Power' ,'Exp', 'Log', 'Addition', 'Multiplication', 'Cos', 'Tan', 'Sin'), multiple=F),
-                                                                    textInput("transformCovValue", label = "Transform Value", placeholder = "", width = 100),
-                                                                    textInput("transformCovNewName", label = "New Covariate Name", placeholder = ''),
-                                                                    actionButton('transformCov', "Transform")
-                                                                    ),
-                                                          fluidRow( actionButton('CovariateDelete', "Delete Covariates")),
-                                                          fluidRow( actionButton('CovariateRename', "Delete Covariates"))
-                                                          
-                                             ),
-                                             mainPanel(
-                                               
-                                               withSpinner(leafletOutput("CovariateMap", width = "450", height = "450")),
-                                               withSpinner(verbatimTextOutput('covDesc')),
-                                               withSpinner(plotlyOutput("covDensityChart", width = "450", height = "450"))
-                                             )
-                                           )
-                                  ),
+                                  
                                   tabPanel("Currently Available Project Covariates",
                                            sidebarLayout(
                                              sidebarPanel(width = 2, 
@@ -116,6 +106,31 @@ ui <- tagList(fluidPage(
                                              mainPanel(
                                                HTML('<H2 style="color:blue;font-weight: bold;">Currently Available Project Covariates</H2>'),
                                                withSpinner(plotOutput('covPlots'))
+                                             )
+                                           )
+                                  ),
+                                  tabPanel("Explore Covariates",
+                                           sidebarLayout(
+                                             sidebarPanel(width = 2,
+                                                          #HTML('<p  style="color:blue;font-weight: bold;">Currently Available Project Covariates</p>'),
+                                                          selectInput('availCovList', 'Available Covariates', choices=NULL, multiple=F),
+                                                          #actionButton('DeleteCov', "Delete Covariate"),
+                                                          
+                                                          HTML('<H4>Transform Values</H4>'),
+                                                          wellPanel( selectInput('transformCovType', 'Transformation Type', choices=c('Power' ,'Exp', 'Log', 'Addition', 'Multiplication', 'Cos', 'Tan', 'Sin'), multiple=F),
+                                                                     textInput("transformCovValue", label = "Transform Value", placeholder = "", width = 100),
+                                                                     textInput("transformCovNewName", label = "New Covariate Name", placeholder = ''),
+                                                                     actionButton('transformCov', "Transform")
+                                                          ),
+                                                          fluidRow( actionButton('CovariateDelete', "Delete Covariates")),
+                                                          fluidRow( actionButton('CovariateRename', "Delete Covariates"))
+                                                          
+                                             ),
+                                             mainPanel(
+                                               
+                                               withSpinner(leafletOutput("CovariateMap", width = "450", height = "450")),
+                                               withSpinner(verbatimTextOutput('covDesc')),
+                                               withSpinner(plotlyOutput("covDensityChart", width = "450", height = "450"))
                                              )
                                            )
                                   )
@@ -247,7 +262,11 @@ ui <- tagList(fluidPage(
                         ),
                         mainPanel(
                           fluidPage(
-                            fluidRow( withSpinner(leafletOutput("RunModelMap", width = "650", height = "450"))),
+                            fluidRow( 
+                              withSpinner(htmlOutput("RunModelGenerateMap")),
+                              leafletOutput("RunModelMap", width = "650", height = "450")
+                              
+                              ),
                             fluidRow(HTML('<br><H1>Model Covariate Usage</H1><br>'), rHandsontableOutput("ModelConditionsTable")),
                             fluidRow(HTML('<br><H1> Model Summary</H1><br>'), withSpinner(verbatimTextOutput('ModelValidationStats'))),
                             fluidRow(HTML('<br><H1>Internal Model Fold Stats</H1><br>'), rHandsontableOutput("InternalValidationTable")),
@@ -268,8 +287,11 @@ ui <- tagList(fluidPage(
              ),
                      
              tabPanel("Help",  icon = icon("blind"),
-                      includeHTML2(paste0( "www/StaticPages/DSMToolsHelp.htm"))),
-             tabPanel("About",  icon = icon("info-circle"))
+                      #includeHTML2(paste0( "www/StaticPages/DSMToolsHelp.htm"))),
+             includeHTML("www/StaticPages/DSMToolsHelp.htm")),
+             tabPanel("About",  icon = icon("info-circle"),
+                      includeHTML("www/StaticPages/DSMToolsAbout.html")
+                      )
                       
              
              
@@ -348,6 +370,24 @@ getTemplate <- function(projname){
   templateR
 }
 
+getModelNames <- function(projname){
+  nms <- basename( list.files(paste0(rootDir, '/', currentUser, '/', projname, '/Outputs'), pattern='.rds', full.names = T, recursive = T))
+  m1 <- str_remove(nms , '.rds')
+  m2 <- str_remove(m1, 'Model!')
+  #m3 <- str_split(m2, '!')
+  m2
+}
+
+
+getModelNameFromPath <- function(ModelPath){
+  
+  if(file.exists(ModelPath)){
+    basename(dirname(ModelPath))
+  }else{
+    return(NULL)
+  }
+}
+
 ###########################     SERVER    ###########################################
 
 server <- function(input, output, session) {
@@ -376,6 +416,41 @@ server <- function(input, output, session) {
   #RV$ModelData = NULL
   RV$CurrentModelRaster = NULL
   
+  
+  
+  
+  output$projectInfoText <- renderText({
+    req(input$currentProject)
+    r <- getTemplate(input$currentProject)
+    covs <- getCovariates(input$currentProject)
+    covsAsList <- paste0('<li>', covs, '</li>', collapse = ' ')
+    samps <- getSampleFiles(input$currentProject)
+    sampsAsList <- paste0('<li>', samps, '</li>', collapse = ' ')
+    models <- getModelNames(input$currentProject)
+    bits <- str_split(models, '!')
+    msamps <- sapply(bits, function (x) x[1])
+    mprops <- sapply(bits, function (x) x[2])
+    mdepths <- sapply(bits, function (x) x[3])
+    modelsAsList <- paste0('<li> Samples = <b>', msamps, '</b> with soil properties = <b>', mprops, '</b> for <b>', mdepths, '</b> Depth</li>', collapse = ' ')
+    
+    rsum <- ''
+    rsum <- paste0(rsum, '<H4><b>Geographic Template</b></H4>')
+    rsum <- paste0(rsum, '<p>Dimensions  : ', dim(r)[1], ' ',dim(r)[2], ' ', dim(r)[1] * dim(r)[2],  ' (nrow, ncol, ncell)<br>')
+    rsum <- paste0(rsum, 'Resolution  : ',format(round(res(r)[1], 5), nsmall = 2) , ' ',format(round(res(r)[2], 5), nsmall = 2), ' (x, y)<br>')
+    rsum <- paste0(rsum, 'Extent      : ', format(round(extent(r)[1], 5), nsmall = 2), ' ',format(round(extent(r)[2], 5), nsmall = 2), ' ', format(round(extent(r)[3], 5), nsmall = 2), ' ', format(round(extent(r)[4], 5), nsmall = 2), '    (xmin, xmax, ymin, ymax) <br>')
+    rsum <- paste0(rsum, 'Projection : ', crs(r), '<br>')
+    rsum <- paste0(rsum, '</p><br>')
+    rsum <- paste0(rsum, '<H4><b>Covariates</b></H4>')
+    rsum <- paste0(rsum, '<ul>', covsAsList, '</ul><br>')
+    rsum <- paste0(rsum, '<H4><b>Soil Sample Files</b></H4>')
+    rsum <- paste0(rsum, '<ul>', sampsAsList, '</ul><br>')
+    rsum <- paste0(rsum, '<H4><b>Existing Models</b></H4>')
+    rsum <- paste0(rsum, '<ul>', modelsAsList, '</ul')
+    
+    rsum
+    
+    
+  })
   
   
   
@@ -509,6 +584,7 @@ server <- function(input, output, session) {
     if(file.exists(RV$CurrentModelPath)){
       mdir <- dirname(RV$CurrentModelPath)
       mstatsPath <- paste0(mdir, '/', str_replace(basename(RV$CurrentModelPath), '.rds', ''), '!ExternalValidation.csv')
+      print(mstatsPath)
       if(file.exists(mstatsPath)){
         inTable <- read.csv(mstatsPath)
         str(inTable)
@@ -524,7 +600,6 @@ server <- function(input, output, session) {
   
   output$ModelConditionsTable <-renderRHandsontable({
     req(RV$CurrentModelPath)
-    print(paste0("path = ", RV$CurrentModelPath))
     if(file.exists(RV$CurrentModelPath)){
       model <- readRDS(RV$CurrentModelPath)
       rhandsontable(model$usage, manualColumnResize = T, readOnly = TRUE, rowHeaders = F)
@@ -563,9 +638,11 @@ server <- function(input, output, session) {
   
   output$ModelSummary <- renderText({
     req(RV$CurrentModelPath)
-    req(RV$CurrentModel)
-    ms <- summary(RV$CurrentModel)
-    ms$output
+    if(file.exists(RV$CurrentModelPath)){
+        model <- readRDS(RV$CurrentModelPath)
+        ms <- summary(model)
+        ms$output
+    }
   })
   
   
@@ -1066,11 +1143,52 @@ server <- function(input, output, session) {
     removeModal()
   })
   
-  output$RunModelMap <- renderLeaflet({
+  
+  # modelPath <- reactive({
+  #   
+  #   mp <- NULL
+  #   if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
+  #     ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
+  #   }else{
+  #     ModelName <- input$ModelName
+  #   }
+  #   outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
+  #   modelPath<- paste0(outDir, "/model!", ModelName, ".rds")
+  #   
+  #   if(file.exists(modelPath)){
+  #     print(modelPath)
+  #     mp <- modelPath
+  #   }else{
+  #     mp <- ''
+  #   }
+  #   
+  # })
+  
+  observe({
     
+   # req(modelPath)
+    
+    
+    
+    
+    if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
+      ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
+    }else{
+      ModelName <- input$ModelName
+    }
+    outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
+    modelPath<- paste0(outDir, "/model!", ModelName, ".rds")
+
+    if(file.exists(modelPath)){
+      RV$CurrentModelPath <- modelPath
+    }
+    
+  })
+  
+  output$RunModelGenerateMap <- renderText({
     
     req(RV$CurrentModel)
-
+    
     stk <- getCovariateStack(input$currentProject)
     templateR <- getTemplate(input$currentProject)
     isolate({ModelName <- RV$CurrentModelName})
@@ -1079,36 +1197,42 @@ server <- function(input, output, session) {
     tmpfls <- list.files(scratchDir, full.names =T)
     unlink(tmpfls)
     scratchOutRaster <-  paste0(scratchDir, '/model!', ModelName, '.tif' )
-
+    
     outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
     createDirectory(outDir)
-    # tmpfls <- list.files(outDir, full.names =T)
-    # unlink(tmpfls)
-
+    
     depth <- input$ModelDepth
-    modelR <- makeMapParra(model=RV$CurrentModel, templateR, stk, depth, outRasterName=scratchOutRaster, numCPUs=NULL, tidyUp=F)
-    RV$CurrentModelRaster <- modelR
-    RV$CurrentModelPath <- paste0(outDir, '/model!', ModelName, '.rds')
-
-    writeRaster(RV$CurrentModelRaster, paste0(outDir, '/model!', ModelName, '.tif'), overwrite=TRUE)
-    saveRDS(RV$CurrentModel, RV$CurrentModelPath)
-    ms <- summary(model)
+    
+    modelR <- makeMapParra(model=RV$CurrentModel, templateR, stk, depth, outRasterName=scratchOutRaster, numCPUs=NULL, minBlocks=30, tidyUp=F)
+    
+    modPath <- paste0(outDir, '/model!', ModelName, '.rds')
+    
+    writeRaster(modelR, paste0(outDir, '/model!', ModelName, '.tif'), overwrite=TRUE)
+    saveRDS(RV$CurrentModel, modPath)
+    ms <- summary(RV$CurrentModel)
     cat(ms$output, file = paste0(outDir, '/model!', ModelName, '.txt'))
+    
+    RV$CurrentModelRaster <- modelR
+    RV$CurrentModelPath <- modPath
+    
+    return(" ")
+    
+  })
+  
+  
+  output$RunModelMap <- renderLeaflet({
+    
+    req(RV$CurrentModelPath)
+    
+    ModelName <- getModelNameFromPath(RV$CurrentModelPath)
 
-  #  tmpfls <- list.files(scratchDir, full.names =T)
-  #  unlink(tmpfls)
-    
-    
-    # RV$CurrentModelPath <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/Demo/Myanmar/Outputs/20181018-PYB_data!SiteID!5/model!20181018-PYB_data!SiteID!5.rds'
-    # RV$CurrentModel <- readRDS(RV$CurrentModelPath)
-    # isolate({ModelName <- RV$CurrentModelName})
-    # RV$CurrentModelRaster <- raster('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/Demo/Myanmar/Outputs/20181018-PYB_data_SiteID_5/model_20181018-PYB_data_SiteID_5.tif')
-    # modelR <-  RV$CurrentModelRaster
+    modelR <- raster(str_replace(RV$CurrentModelPath, '.rds', '.tif'))
     pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(modelR), na.color = "transparent")
     leaflet() %>%
       addProviderTiles("Esri.WorldImagery", options = providerTileOptions(noWrap = TRUE), group = "Satelite Image") %>%
       addRasterImage(modelR, colors = pal, opacity = 0.8) %>%
       leaflet::addLegend(pal = pal, values = values(modelR), title = ModelName )
+      
   })
   
   
@@ -1132,25 +1256,30 @@ server <- function(input, output, session) {
       dir.create(modOutDir, recursive = T)
     }else{
         fls <- list.files(modOutDir, full.names = T)
-        print(fls)
+        #print(fls)
         unlink(fls)
     }
     
     outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
-     createDirectory(outDir)
-     tmpfls <- list.files(outDir, full.names =T)
-    # unlink(tmpfls)
-    
-    
+    if(!dir.exists(outDir)){
+      dir.create(outDir, recursive = T)
+    }else{
+      fls <- list.files(outDir, full.names = T)
+      #print(fls)
+      unlink(fls)
+    }
+   
+    tmpfls <- list.files(outDir, full.names =T)
     flds <- colnames(RV$CurrentCovDrillData)
     attInd<- which(flds==input$ModelAttribute)
     DSM_datasub<- RV$CurrentCovDrillData [c(1, 2, 3, 5, 6,  attInd, 4, (ncol(RV$CurrentSampleData )+1):ncol(RV$CurrentCovDrillData))]
+    DSM_datasub<- DSM_datasub[complete.cases(DSM_datasub),]
     DSM_datasub$folds<- NA
 
 ## remove any missing values
       foldIndex<- which(names(DSM_datasub)=="folds")
-      which(!complete.cases(DSM_datasub[,-foldIndex]))
-      DSM_datasub<- DSM_datasub[complete.cases(DSM_datasub[,-foldIndex]),]
+      #which(!complete.cases(DSM_datasub[,-foldIndex]))
+      
       nrow(DSM_datasub)
       
       # stratified k-fold cross-validation
@@ -1158,13 +1287,14 @@ server <- function(input, output, session) {
       folds <- as.numeric(input$ModelFoldNum)
       iterts <- reps*folds
       
+      
       #tables to put goof outputs
       cGoof<- matrix(NA, nrow=reps*folds, ncol=5)
       vGoof<- matrix(NA, nrow=reps*folds, ncol=5)
       fmat<- matrix(NA, nrow=reps, ncol=folds)
       
       cnt=1 # iteration counter
-      i=1
+      #i=1
       
       for (r in 1:reps){
         
@@ -1189,49 +1319,48 @@ server <- function(input, output, session) {
         fmat[r,]<- t(as.matrix(summary(as.factor(DSM_datasub$folds))))
         
         ## do the k-fold cross-validation
-        fcnt<- 1
+       # fcnt<- 1
         for (f in 1:folds){
 
           updateProgressBar(
             session = session,
             id = "modelRunProgress",
-            value = i, total = iterts,
+            value = cnt, total = iterts,
             title = paste("Training the model...")
           )
-          i <- i +1
+         
           cDat<- DSM_datasub[DSM_datasub$folds != f,] # calibration data
           vDat<- DSM_datasub[DSM_datasub$folds == f,] # validation data
           
-          #fit model
-          df <- cDat[, c ( 8:ncol(cDat)-1)]
-          str(df)
-          cub.mod<- cubist(x = df, y = cDat[, attInd], cubistControl(rules = input$ModelNumRules, extrapolation = input$ModelExtrapThresh), committees = 1)
-          
+          #fit the model on the whole dataset
+          df <- cDat[, c(7:(ncol(cDat)-1))]
+          #print(str(df))
+
+          cub.mod<- cubist(x = df, y = cDat[, 6], cubistControl(rules = input$ModelNumRules, extrapolation = input$ModelExtrapThresh), committees = 1, label = input$ModelAttribute)
+          #summary(cub.mod)
           #save model to file
           
           modelFile<- paste(modOutDir, "/kfold_mod_", "r", r, "_f", f, "_.rds", sep="")
           saveRDS(object = cub.mod, file = modelFile)
           
-          ## -Model summary
-          #summary(cub.mod)
-          
           ## Goodness of fit
           #Internal validation
-          Cubist.pred.C <- predict(cub.mod, newdata = cDat)
-          cGoof[cnt,]<- as.matrix(goof(observed = cDat[, attInd] , predicted = Cubist.pred.C ))
+          Cubist.pred.C <- predict(cub.mod, newdata = cDat[, c(7:(ncol(cDat)-1))])
+          cGoof[cnt,]<- as.matrix(goof(observed = cDat[, 6] , predicted = Cubist.pred.C ))
           
           #External validation
-          Cubist.pred.V <- predict(cub.mod, newdata = vDat)
-          vGoof[cnt,]<- as.matrix(goof(observed = vDat[,attInd], predicted = Cubist.pred.V ))
+          Cubist.pred.V <- predict(cub.mod, newdata = vDat[, c(7:(ncol(cDat)-1))])
+          vGoof[cnt,]<- as.matrix(goof(observed = vDat[,6], predicted = Cubist.pred.V ))
           
           cnt<- cnt+1
+          
         }
         
       }
       
-      df <- DSM_datasub[, c ( 8:ncol(DSM_datasub)-1)]
-      
-      cub.mod <- cubist(x = df, y = DSM_datasub[, attInd], cubistControl(rules = input$ModelNumRules, extrapolation = input$ModelExtrapThresh), committees = 1)
+      df <- DSM_datasub[, c(7:(ncol(cDat)-1))]
+
+      cub.mod <- cubist(x = df, y = DSM_datasub[, 6], cubistControl(rules = input$ModelNumRules, extrapolation = input$ModelExtrapThresh), committees = 1)
       modelFile<- paste0(outDir, "/Model!", ModelName, ".rds")
       saveRDS(object = cub.mod, file = modelFile)
       
@@ -1239,8 +1368,8 @@ server <- function(input, output, session) {
       names(cGoof)<- c("R2", "concordance", "mse", "rmse", "bias")
       vGoof<- as.data.frame(vGoof)
       names(vGoof)<- c("R2", "concordance", "mse", "rmse", "bias")
-      write.csv(cGoof, paste0(outDir, "/Model!", ModelName, "!InternalValidation.csv"), row.names = F) 
-      write.csv(vGoof, paste0(outDir, "/Model!", ModelName, "!ExternalValidation.csv"), row.names = F) 
+      write.csv(cGoof, paste0(outDir, "/model!", ModelName, "!InternalValidation.csv"), row.names = F) 
+      write.csv(vGoof, paste0(outDir, "/model!", ModelName, "!ExternalValidation.csv"), row.names = F) 
       
       updateProgressBar(
         session = session,
@@ -1254,123 +1383,6 @@ server <- function(input, output, session) {
     
   })
   
-  output$ModelPlot <- renderPlot({
-    
-    
-   
-         
-    
-    # if (input$RunModelBtn > 0){ 
-
-    #   
-    #   isolate({
-    #     
-    #     spls <-  RV$CurrentSplineFile
-    #     
-    #     svals <- spls$harmonised['0-5 cm']
-    #     ids <- spls$harmonised['id']
-    #     svalsDF <- data.frame(sid=ids, vals=svals)
-    #     colnames(svalsDF) <- c('sid', 'vals')
-    #     
-    #     inDF <- RV$SampleFileData
-    #     att <- input$ModelAttribute
-    #     locs <- inDF[inDF$Attribute == att &inDF$UpperDepth == 0, ]
-    #     locs2 <- locs[, c(1,2,3)]
-    #     sdf <- merge(svalsDF, locs2, by.x = 'sid' , by.y = 'sid')
-    #     
-    #     coordinates(sdf) <- ~x+y
-    #     covDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Covariates' )
-    #     covpaths <- list.files( covDir, pattern = paste0( '.tif$'), full.names = T, recursive =F)
-    #     
-    #     stk <- getCovariateStack()
-    #     covPts <- extract(stk, sdf, df=T)
-    #     modDF <- na.omit(data.frame(sdf, covPts[,-1] ))
-    #     modDF2 <- modDF[, c(-1, -3,-4,-5)]
-    #     
-    #     colnames(modDF2)[1] <- 'inVals'
-    #     
-    #     splitSamples <-createTrainingSample(modDF2, 1, 66)
-    #     
-    #     trainSet <- as.data.frame(splitSamples[1])
-    #     
-    #     validSet <- as.data.frame(splitSamples[2])
-    #     colnames(trainSet) <- colnames(modDF2)
-    #     colnames(validSet) <- colnames(modDF2)
-    #     
-    #     #MLmodel <- ranger::ranger(inVals ~ ., data = trainset, write.forest = T, importance = 'impurity', num.trees = 500)
-    #     
-    #     MLmodel <- cubist(x = trainSet[,-1], y = trainSet[,1], committees=1,  cubistControl( label = att, rules = 5))
-
-    #     
-    #     mvals <- predict(MLmodel, validSet[,-1])
-    #     mfit <- data.frame(validSet[,1], mvals)
-    #     colnames(mfit) <- c('obs', 'mod')
-    #     
-    #     stk <- stack(covpaths)
-    #     templateR <- stk[[1]]
-    #     outRaster <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/', 'model', '.tif' )
-    #     outdir <- dirname(outRaster)
-    #     rName <- basename(outRaster)
-    #     withoutext <- str_split(rName, '\\.')[[1]][1]
-    #     
-    #     scratchDir <- paste0(outdir, '/scratch_', withoutext)
-
-    #     createDirectory(scratchDir)
-    #     # 
-
-    #     modelR <- makeMapParra(model=MLmodel, templateR, stk, outRasterName=outRaster, numCPUs=NULL, tidyUp=F)
-    #     
-    #     RV$CurrentModelRaster <- modelR
-    #     
-    #     
-    #     
-    #     
-    #     
-    #     
-    #     obsVal <- mfit[,1]
-    #     modelVal <- mfit[,2]
-    #     
-    #     cccC <- epi.ccc(obsVal, modelVal, ci = "z-transform",conf.level = 0.95)
-    #     r.sqC <- cor(obsVal, modelVal)^2
-    #     
-    #     fitC <- lm(modelVal ~ obsVal-1, data=mfit)
-    #     validC = data.frame(obsVal, modelVal)
-    #     
-    #     totAp <- sum(obsVal)
-    #     totS <- sum(modelVal)
-    #     prop <- totAp/totS
-    #     
-    #     minVal = 0
-    #     maxX = max(obsVal)
-    #     maxY = max(modelVal)
-    #     maxVal = max(maxX, maxY)
-    #   })
-    #   
-    #   
-    #   
-    #   RV$CurrentModel <- MLmodel
-    #   
-    #   isolate({
-    #     
-    #     plot(validC, main=paste( 'Model Fit' ), xlab='Observed', ylab = 'Predicted', pch=3, cex =0.5, xlim = c(minVal,maxVal), ylim = c(minVal,maxVal))
-    #     abline(fitC, col="red")
-    #     abline(0,1, col="green")
-    #     #mtext(subtitle, cex=0.5)
-    #     
-    #     tx =  maxVal *0.6
-    #     ty1 =  maxVal * 0.05
-    #     ty2 =  maxVal * 0.15
-    #     
-    #     legPos = 'topright'
-    #     legend(legPos, c('Regression Line', '1:1') , lty=1, col=c('red','green'), bty='n', cex=1)
-    #     
-    #     text(tx,ty1, paste("R2 = ",round(r.sqC, digits = 2)), pos=4)
-    #     text(tx,ty2, paste("LCCC = ", round(cccC$rho.c[,1], digits = 2)), pos=4)
-    #     
-    #   })
-    # }
-    
-  })
   
   
   
