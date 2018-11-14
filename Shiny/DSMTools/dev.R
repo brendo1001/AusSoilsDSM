@@ -522,3 +522,22 @@ round(mean(inTable$R2), 2)
 
 
 
+shell("explorer C:\\Users", intern=TRUE) 
+
+
+
+library(leaflet)
+r <- raster('C:/Projects/Myanmar/MarkData/Terrain_MidSlopePosition.tif')
+ra <- aggregate(r, 5, 'mean')
+m <- leaflet()
+m <- addTiles(m)
+m <- addRasterImage(m, ra)
+m
+
+
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  
+m  # Print the map
+
+
