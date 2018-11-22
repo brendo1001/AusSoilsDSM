@@ -1,3 +1,4 @@
+Version = '0.1.0'
 library(rgdal)
 library(raster)
 library(stringr)
@@ -75,10 +76,10 @@ ui <- tagList(fluidPage(
                                    wellPanel(HTML('<p style="color:blue;font-weight: bold;">Project Management</p>'),
                                              fluidRow(selectInput('currentProject', 'Select a Project to Use', choices = NULL)
                                                       ,bsTooltip("currentProject", "Select an existing project to use from this list")),
-                                             fluidRow( actionButton('AddNewProject', "Create New Project")
-                                                       ,bsPopover("AddNewProject", "Create a new project. You need to specify a name and a Template raster"), br(), br(), br()),
-                                             fluidRow( actionButton('DeleteProject', "Delete Project")),
-                                             fluidRow( actionButton('RenameProject', "Rename Project"))
+                                             fluidRow( actionButton('AddNewProject', "Create New Project", class = "btn-success")
+                                                       ,bsPopover("AddNewProject", "Create a new project. You need to specify a name and a Template raster"), br(), br(), br(), br()),
+                                             fluidRow( actionButton('DeleteProject', "Delete Project", class = "btn-info")), br(),
+                                             fluidRow( actionButton('RenameProject', "Rename Project", class = "btn-info"))
                                              )
                       ),
                       mainPanel(
@@ -129,10 +130,10 @@ ui <- tagList(fluidPage(
                                                           wellPanel( selectInput('transformCovType', 'Transformation Type', choices=c('Power' ,'Exp', 'Log', 'Addition', 'Multiplication', 'Cos', 'Tan', 'Sin'), multiple=F),
                                                                      textInput("transformCovValue", label = "Transform Value", placeholder = "", width = 100),
                                                                      textInput("transformCovNewName", label = "New Covariate Name", placeholder = ''),
-                                                                     actionButton('transformCov', "Transform")
+                                                                     actionButton('transformCov', "Transform", class = "btn-success"),br(),br()
                                                           ),
-                                                          fluidRow( actionButton('CovariateDelete', "Delete Covariates")),
-                                                          fluidRow( actionButton('CovariateRename', "Rename a Covariate"))
+                                                          fluidRow( actionButton('CovariateDelete', "Delete Covariates", class = "btn-info")),br(),
+                                                          fluidRow( actionButton('CovariateRename', "Rename a Covariate", class = "btn-info"))
                                                           
                                              ),
                                              mainPanel(
@@ -158,7 +159,7 @@ ui <- tagList(fluidPage(
                                                           wellPanel(HTML('<p style="color:blue;font-weight: bold;">Upload My Soil Sample Data</p>'),
                                                                     fileInput("sampleFileRaw", "Choose CSV File", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))),
                                                           wellPanel(HTML('<p style="color:blue;font-weight: bold;">Process My Data</p>'),
-                                                                    actionButton("ProcessSampleData","Import Sample Data"),br(),br(),
+                                                                    actionButton("ProcessSampleData","Import Sample Data", class = "btn-success"),br(),br(),
                                                                     selectInput("sampsSiteID", "Sample Site ID" , choices = NULL),
                                                                     selectInput("sampsLatitude", "Latitude  Field" , choices = NULL),
                                                                     selectInput("sampsLongitude", "Longitude Field", choices = NULL),
@@ -221,7 +222,7 @@ ui <- tagList(fluidPage(
                                                htmlOutput("DrillSampleFileText"),
                                      
                                      wellPanel(HTML('<p style="color:blue;font-weight: bold;">Drill Covariate Data</p>'),
-                                               withBusyIndicatorUI( actionButton("DrillSampleData","Drill Rasters"))
+                                               withBusyIndicatorUI( actionButton("DrillSampleData","Drill Rasters", class = "btn-success"))
                                      )
                         ),
                         mainPanel(
@@ -251,7 +252,7 @@ ui <- tagList(fluidPage(
                                      awesomeCheckbox(inputId = "ModelRunDoUncert", 
                                                      label = "Generate Uncertainty Bounds. (This will take much longer to generate)", 
                                                      value = F),
-                                     actionButton(inputId = "RunModelBtn", label = "Run Model"),
+                                     actionButton(inputId = "RunModelBtn", label = "Run Model", class = "btn-success"),
                                      
                                      br(),  br(),
                                      progressBar(id = "modelRunProgress", value = 0, total = 100,  title = "", display_pct = TRUE ),
@@ -271,12 +272,14 @@ ui <- tagList(fluidPage(
                         mainPanel(
                           fluidPage(
                             fluidRow( 
-                              withSpinner(leafletOutput("RunModelMap", width = "650", height = "450")),
+                              
                               actionLink("toggleModelDetails", "Show the Model Setup Details"),
                               conditionalPanel(
                                 condition = "input.toggleModelDetails % 2 == 1",
                                 verbatimTextOutput('ModelDetails'))
-                              ),
+                            ),
+                              withSpinner(leafletOutput("RunModelMap", width = "650", height = "450")),
+                              
                               #),
                             fluidRow(htmlOutput('textLabel_CovariateUsage'), rHandsontableOutput("ModelConditionsTable")),
                             fluidRow(div(style="width:200px;",htmlOutput('textLabel_ModelFitStats'), withSpinner(verbatimTextOutput('ModelValidationStats')))),
@@ -294,7 +297,8 @@ ui <- tagList(fluidPage(
              tabPanel("Download Data", value ='DownloadDataPanel', icon = icon("download"),
                       wellPanel(
                         selectInput("ModelDownloadSelect", "Download Data", c('Model Package', 'Covariates', 'Sample Files'), width = 200),
-                        downloadButton('ModelDownloadBtn', 'Download'),
+                       
+                        uiOutput("ModelDownloadButtonRUI"),
                         uiOutput("ModelDownloadLnk")
                       )
              ),
@@ -491,6 +495,15 @@ server <- function(input, output, session) {
     t
   })
   
+  
+  output$ModelDownloadButtonRUI<- renderUI({
+    
+    if(currentUser != 'LocalPC'){
+      downloadButton('ModelDownloadBtn', 'Download', class = "btn-success")
+      #actionLink("ModelDownloadLnkReal","Show Data") 
+    }
+    
+  })
 
   output$ModelDownloadLnk <- renderUI({
     
@@ -953,6 +966,7 @@ server <- function(input, output, session) {
 
     inDF <-RV$CurrentSampleData
     att <- input$SampleAtt
+
     sdf2 <- data.frame(SiteID=inDF$SiteID,Easting=inDF$Easting, Northing=inDF$Northing, Val=inDF[att] )
     sdf3 <- na.omit(sdf2)
 
@@ -1030,6 +1044,18 @@ server <- function(input, output, session) {
       rhandsontable(RV$CurrentSampleData,  height = 600, manualColumnResize = T, readOnly = TRUE, rowHeaders = F)
   })
   
+  observe({
+    
+    input$currentProject
+    #req(RV$CurrentSampleDataName)
+    samps <- getSampleFiles(input$currentProject)
+    updateSelectInput(session, 'SampleFile', choices = samps, selected = RV$CurrentSampleDataName)
+  })
+  
+  observe({
+    req(RV$CurrentSampleDataFields)
+    updateSelectInput(session, 'SampleAtt', choices = RV$CurrentSampleDataFields)
+  })
   
  
   
@@ -1046,7 +1072,7 @@ server <- function(input, output, session) {
       sampflds2 <- Filter(is.numeric, sampflds)
       # chki <- which(sapply(sampflds2, is.integer) )
       # sampflds2[chki] <- lapply(sampflds2[chki], as.numeric)
-      # print( sampflds2[chki])
+
       
       
       if(input$sampsStratified != 'None' &  nchar(str_trim(input$sampsStratified))>1 ){
@@ -1081,25 +1107,23 @@ server <- function(input, output, session) {
       RV$CurrentSampleDataFields <- input$sampsDataFields
       
       inDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples' )
-      spath <- paste0(inDir, '/', input$sampleFileRaw$name)
+      spath <- paste0( inDir, '/', input$sampleFileRaw$name)
       write.csv(newdf, spath, row.names = F)
-      
-      
-      
-      
+
       RV$CurrentSampleDataName <- str_remove(input$sampleFileRaw$name, '.csv')
      
 
-      
-      
-      
       ## check if the location overlay the geographic template
       sdf4 <- unique(newdf[c("SiteID", "Easting", "Northing")])
       coordinates(sdf4) <- ~Easting+Northing
       templateR <- getTemplate(input$currentProject)
       crs(sdf4) <- crs(templateR)
       psdf <- reproject(sdf4)
-      deleteShapefile(paste0(inDir, '/', RV$CurrentSampleDataName, '.shp'))
+      #deleteShapefile(paste0(inDir, '/', RV$CurrentSampleDataName, '.shp'))
+      unlink(paste0(inDir, '/', RV$CurrentSampleDataName, '.shp'))
+      unlink(paste0(inDir, '/', RV$CurrentSampleDataName, '.dbf'))
+      unlink(paste0(inDir, '/', RV$CurrentSampleDataName, '.prj'))
+      unlink(paste0(inDir, '/', RV$CurrentSampleDataName, '.shx'))
       writeOGR(psdf, inDir, RV$CurrentSampleDataName, driver="ESRI Shapefile")
       
       inBdyPath <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/GeoTemplate' )
@@ -1113,8 +1137,9 @@ server <- function(input, output, session) {
         shinyalert("Oops!", "It looks as if none of the points in this sample file overlay your area of interest.", type = "error")
       }
       
-      samps <- getSampleFiles(input$currentProject)
-      updateSelectInput(session, 'SampleFile', choices = samps, selected = RV$CurrentSampleDataName)
+      
+      
+
       RV$CurrentSampleData <- newdf
 
 
@@ -1303,7 +1328,7 @@ server <- function(input, output, session) {
         )
       ), 
       title="Delete Selected Covariates",
-      footer = tagList(actionButton("confirmCovDelete", "Delete"),modalButton("Cancel")
+      footer = tagList(actionButton("confirmCovDelete", "Delete", class = "btn-info"),modalButton("Cancel")
       )
     ))
   })
@@ -1343,7 +1368,7 @@ server <- function(input, output, session) {
         textInput('renameCovNewName', 'New name')
       ), 
       title="Rename Selected Covariate",
-      footer = tagList(actionButton("confirmCovRename", "Rename"),modalButton("Cancel")
+      footer = tagList(actionButton("confirmCovRename", "Rename", class = "btn-info"),modalButton("Cancel")
       )
     ))
   })
@@ -1383,7 +1408,7 @@ server <- function(input, output, session) {
         selectInput("deleteProjSelect", label = "Delete a Project", choices = getProjects())
       ), 
       title="Delete a Project",
-      footer = tagList(actionButton("confirmProjDelete", "Delete"),modalButton("Cancel")
+      footer = tagList(actionButton("confirmProjDelete", "Delete", class = "btn-info"),modalButton("Cancel")
       )
     ))
   })
@@ -1427,7 +1452,7 @@ server <- function(input, output, session) {
         fileInput("chooseTemplate", "Choose Spatial Template GeoTiff", multiple = F,  accept = c("image/tiff", ".tif"))
       ), 
       title="Create a Project",
-      footer = tagList(actionButton("confirmCreateProject", "Create"), modalButton("Cancel")
+      footer = tagList(actionButton("confirmCreateProject", "Create", class = "btn-success"), modalButton("Cancel")
       )
     ))
   })
@@ -1469,7 +1494,7 @@ server <- function(input, output, session) {
         textInput("renameProjectTo", label = "To Project Name", placeholder = "NewProject")
       ), 
       title="Create a Project",
-      footer = tagList(actionButton("confirmRenameProject", "Rename"), modalButton("Cancel")
+      footer = tagList(actionButton("confirmRenameProject", "Rename", class = "btn-info"), modalButton("Cancel")
       )
     ))
   })
@@ -1608,33 +1633,6 @@ server <- function(input, output, session) {
   })
   
   
-  #  observe({
-  #    
-  #    req(RV$CurrentModelPath)
-  #    proxy <- leafletProxy("RunModelMap") 
-  #    print("Proxy")
-  #    covPath <- str_replace(RV$CurrentModelPath, '.rds', '_CoV.tif')
-  #    if(file.exists(covPath)){
-  #      
-  #      modelRCov <- raster(covPath)
-  #      
-  #      pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(modelRCov), na.color = "transparent")
-  #      #lg<-c(lg,"Model CoV")
-  #      proxy %>%  addRasterImage(modelRCov, colors = pal, opacity = 0.8,  group = "Model CoV")
-  #      #modMap %>% hideGroup("Model CoV")
-  #      # leaflet::addLegend(pal = pal, values = values(modelR), title = ModelName )
-  #    }
-  # #   
-  #    proxy %>% addLayersControl(
-  #       baseGroups = c("Satelite Image"),
-  #      overlayGroups = c('Result', 'Model Cov'),
-  #       options = layersControlOptions(collapsed = FALSE)
-  #     ) 
-  # #   
-  # #   proxy
-  # #   
-  # })
-  
 
   
   ### Run the model
@@ -1750,7 +1748,7 @@ server <- function(input, output, session) {
           DSM_datasub<- do.call(rbind.data.frame, sp_DSM_datasub)
           
         } else if(input$ModelTrainingMethod == 'Transect Lumped'){
-        print('Transect Lumped')
+
           dats1<- DSM_datasub
           sel<- length(unique(dats1$Transect))
           
@@ -2249,9 +2247,6 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
-
 
 
 
