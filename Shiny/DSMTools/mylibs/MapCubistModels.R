@@ -68,26 +68,36 @@ print ('Finished model')
 
 
 
-writeRasterFromFilesSimple<- function (templateR, rasterDir, outRaster ){
-print(paste0(rasterDir, '/brickinfo.rds'))
+writeRasterFromFilesSimple<- function (templateR, rasterDir, outRaster, outType = '' ){
+  
+  if(outType != ''){
+    outType = paste0( outType, '_')
+  }
+  
+  tempName <- str_replace(outRaster, '.tif', '_nomask.tif')
+
   bs <-readRDS(paste0(rasterDir, '/brickInfo.rds'))
   predR<-raster(templateR)
-  predR<-writeStart(predR,filename=outRaster,overwrite=TRUE,NAflag=-9999,datatype="FLT4S")
+  predR<-writeStart(predR,filename=tempName,overwrite=TRUE,NAflag=-9999,datatype="FLT4S")
 
   for (i in 1:bs$n)
   {
-    bname = paste(rasterDir, '/r_', i, '.rds',  sep="")
+    bname = paste(rasterDir, '/r_', outType, i, '.rds',  sep="")
     # print(bname)
     if(file.exists(bname)){
       blockVals <-readRDS(bname)
-
       predR <-writeValues(predR, blockVals, bs$row[i])
     }
   }
   predR<-writeStop(predR)
 
-  r <- raster(outRaster)
-  r2 <- mask(r, templateR)
+  #r <- raster(outRaster)
+  r2 <- mask(predR, templateR, filename=outRaster, overwrite=T)
+  if(file.exists(tempName))
+  {
+    unlink(tempName)
+  }
+  #plot(r2)
   return(r2)
 }
 
@@ -123,7 +133,7 @@ applyMapParallelWithDepth<- function(model, templateR, theStack, depth, outDir, 
   }
   dv <- rep(depth, nrow(cubCovVals))
   indf <- cbind(Depth=dv, cubCovVals[, -1])
-  str(indf)
+  #str(indf)
   
   prediction = predict(model, indf )
   bname = paste0(outDir, '/r_' , k, '.rds',  sep="")
@@ -138,5 +148,63 @@ getCovariatesUsedInModel <- function(model)
   usage <- m$usage
   covs<-usage[usage$Conditions > 0 | usage$Model > 0, ]
   return(covs$Variable)
+}
+
+
+
+applyMapParallelWithDepthBooty<- function(models, templateR, theStack, depth, outDir, bs, covNamesinModel, doCIs=T){
+  
+  ncells = bs$nrows[k] * ncol(templateR)
+  theSeq = seq(ncells)
+  cubCovVals = data.frame(theSeq)
+  
+  for (i in 1:nlayers(theStack)) 
+  {
+    rl = raster(theStack, layer=i)
+    if(names(rl) %in% covNamesinModel){
+      v <- getValues(rl, row=bs$row[k], nrows=bs$nrows[k] )
+    }else{
+      v <- rep(NA, ncells) # bit of a hack - df needs same structure as input df regardless of covariate usage in model
+    }
+    cubCovVals[names(rl)] <- v    
+  }
+ 
+  dv <- rep(depth, nrow(cubCovVals))
+  indf <- cbind(Depth=dv, cubCovVals[, -1])
+  
+  
+  ids <- rep(0,ncells)
+  bootOuts = data.frame(ids)
+  for(j in 1:length(models)){
+    
+    #print(paste0(modelDir, '/'  , attribute,'_CubistModel_' ,j, '.rds'))
+    #model<-readRDS(paste0(modelDir,'/' , attribute,'_CubistModel_' ,j, '.rds'))
+    prediction = predict(models[[j]], indf)
+    bootOuts[paste0('P_',j)] <- prediction
+  }
+  
+  means <- apply(bootOuts[,-1], 1, mean, na.rm=TRUE)
+  CoV <- apply(bootOuts[,-1], 1, cv, na.rm=TRUE)
+  
+  meanName = paste0(outDir, '/r_mean_' , k, '.rds',  sep="")
+  CoVName = paste0(outDir, '/r_CoV_' , k, '.rds',  sep="")
+  cat(meanName)
+  saveRDS(means, meanName)
+  saveRDS(CoV, CoVName)
+  
+  limits <- c(05, 95)
+  
+  if(doCIs){
+    cis <- apply(bootOuts[,-1], 1, quantile, probs = c(limits[[1]]/100, limits[[2]]/100),  na.rm = TRUE)
+    lb <- cis[1,]
+    ub <- cis[2,]
+    lbName = paste0(outDir,  '/r_', limits[[1]], '_' , k, '.rds',  sep="")
+    cat(lbName)
+    saveRDS(lb, lbName)
+    ubName = paste0(outDir,  '/r_', limits[[2]], '_'  , k, '.rds',  sep="")
+    cat(ubName)
+    saveRDS(ub, ubName)
+  }
+ 
 }
 

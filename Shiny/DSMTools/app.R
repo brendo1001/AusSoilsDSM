@@ -17,39 +17,34 @@ library(plotKML)
 library(rgeos)
 library(rasterVis)
 library(data.table)
-#library(ithir)
 library(ranger)
 library(Cubist)
+library(png)
+library(shinyBS)
 
-library(epiR)
 
 source('DSMToolsConfig.R')
 source('mylibs/GeneralUtils.R')
 source('mylibs/VectorUtils.R')
-#source('mylibs/ModelUtils.R')
 source('mylibs/MapCubistModels.R')
 source('mylibs/ithirSub.R')
 source("helpers.R")
 
 
-defaultReps <- 2
-defaultFolds <- 2
-
-state <- suppressWarnings( read.csv(paste0(rootDir, '/', currentUser, '/state.cfg'), sep = "=", header = F ))
+### Remember some states from the last session
+stf <- paste0(rootDir, '/', currentUser, '/state.cfg')
+if(file.exists(stf)){
+state <- suppressWarnings( read.csv(stf, sep = "=", header = F ))
 
 previousProj <- str_trim(as.character(state[1,2]))
 previousSamples <- str_trim(as.character(state[2,2]))
-
-
-includeHTML2 <- function (path) {
-  lines <- readLines(path, warn = FALSE, encoding = "UTF-8")
-  # lines2 <-paste(lines, collapse = "\\r\\n")
-  # l3 <- str_split(lines2, '<body>')
-  # l4 <- str_split(l3[[1]][2], '</body>')
-  # l5 <- l4[[1]][1]
-  # l6 <- str_replace_all(l5, "[\\\\r\\\n]" , "")
-  return(HTML(lines))
+}else{
+  previousProj <- NULL
+  previousSamples <- NULL
 }
+
+cat('yep', file = 'appisrunning.txt')
+
 
 
 ######################################   UI   ###################################################
@@ -60,7 +55,11 @@ ui <- tagList(fluidPage(
   tags$style(appCSS),
   useShinyalert(),
   
-  tags$head(tags$link( rel="icon", type="image/png", href="favicon-32x32.png", sizes="32x32" ),
+  tags$head(
+    ### icon for web server version
+    #tags$link( rel="icon", type="image/png", href="layers.png", sizes="32x32" ),
+    ### icon for standalone version
+    tags$link( rel="icon", type="image/png", href="http://localhost:1984/layers.png", sizes="32x32" ),
             tags$head(tags$script(src = "message-handler.js")),
             tags$title("DSM Tools"),
             HTML("<img src=soilcores2.PNG style='vertical-align: top;'>")
@@ -74,8 +73,10 @@ ui <- tagList(fluidPage(
                     sidebarLayout(
                       sidebarPanel(width = 3, 
                                    wellPanel(HTML('<p style="color:blue;font-weight: bold;">Project Management</p>'),
-                                             fluidRow(selectInput('currentProject', 'Select a Project to Use', choices = NULL)),
-                                             fluidRow( actionButton('AddNewProject', "Create New Project"), br(), br(), br()),
+                                             fluidRow(selectInput('currentProject', 'Select a Project to Use', choices = NULL)
+                                                      ,bsTooltip("currentProject", "Select an existing project to use from this list")),
+                                             fluidRow( actionButton('AddNewProject', "Create New Project")
+                                                       ,bsPopover("AddNewProject", "Create a new project. You need to specify a name and a Template raster"), br(), br(), br()),
                                              fluidRow( actionButton('DeleteProject', "Delete Project")),
                                              fluidRow( actionButton('RenameProject', "Rename Project"))
                                              )
@@ -85,12 +86,12 @@ ui <- tagList(fluidPage(
                           fluidRow( HTML('<H1><p style="color:blue;font-weight: bold;">Project Information</p></H1>')),
                         fluidRow(br(), br()),
                         
-                        fluidRow(htmlOutput('projectInfoText'))
+                        fluidRow(htmlOutput('projectInfoText1')),
+                        #fluidRow(plotOutput('projectInfoTemplateImage', width = "250", height = "250")),
+                       
+                        fluidRow(htmlOutput('projectInfoText2'))
                       )
                     )
-                        
-                        
-                        
                   )      
              ),
              
@@ -110,8 +111,8 @@ ui <- tagList(fluidPage(
                                             ),
                                              mainPanel(
                                                HTML('<H2 style="color:blue;font-weight: bold;">Currently Available Project Covariates</H2>'),
-                                               #withSpinner(plotOutput('covPlots', width=1000, height=1000)),
-                                               withSpinner(imageOutput("covImage"))
+                                               withSpinner(plotOutput('covPlots', width=1000, height=1000))
+                                               #withSpinner(imageOutput("covImage"))
                                                
                                              )
                                            )
@@ -157,7 +158,7 @@ ui <- tagList(fluidPage(
                                                           wellPanel(HTML('<p style="color:blue;font-weight: bold;">Upload My Soil Sample Data</p>'),
                                                                     fileInput("sampleFileRaw", "Choose CSV File", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))),
                                                           wellPanel(HTML('<p style="color:blue;font-weight: bold;">Process My Data</p>'),
-                                                                    actionButton("ProcessSampleData","Import Sample Data"),
+                                                                    actionButton("ProcessSampleData","Import Sample Data"),br(),br(),
                                                                     selectInput("sampsSiteID", "Sample Site ID" , choices = NULL),
                                                                     selectInput("sampsLatitude", "Latitude  Field" , choices = NULL),
                                                                     selectInput("sampsLongitude", "Longitude Field", choices = NULL),
@@ -181,13 +182,14 @@ ui <- tagList(fluidPage(
                                                           )
                                              ),
                                              mainPanel(
+                                               withSpinner( verbatimTextOutput("SampleSummaryInfo")),
                                                withSpinner( rHandsontableOutput("UploadSamplesTable"))
                                                
                                                #withSpinner(leafletOutput("UploadSamplesMap", width = "650", height = "450"))
                                              )
                                            ) 
                                   ),
-                                  tabPanel("Explore Sample Data",  icon = icon("cloud-upload-alt"), 
+                                  tabPanel("Explore Sample Data",  icon = icon("glasses"), 
                                            sidebarLayout(
                                              sidebarPanel(width =2, 
                                                           selectInput("SampleFile", "Soil Attribute Dataset", choices = NULL),  
@@ -243,37 +245,39 @@ ui <- tagList(fluidPage(
                                     
                                      selectInput("ModelAttribute", "Soil Attribute", choices = NULL),
                                      numericInput("ModelDepth", "Depth (cm)", value=5, min=1, max=200),
-                                     textInput('ModelName', 'Model Name'),
+                                     #textInput('ModelName', 'Model Name'),
+                                     textAreaInput("ModelDescription", "Model Description"),
                                      selectInput("ModelTrainingMethod", "Training Method", choices = c('Simple Random','Stratified', 'Transect Lumped')),
-
-                                     actionButton(
-                                       inputId = "RunModelBtn",
-                                       label = "Run Model"
-                                     ),
+                                     awesomeCheckbox(inputId = "ModelRunDoUncert", 
+                                                     label = "Generate Uncertainty Bounds. (This will take much longer to generate)", 
+                                                     value = F),
+                                     actionButton(inputId = "RunModelBtn", label = "Run Model"),
+                                     
                                      br(),  br(),
                                      progressBar(id = "modelRunProgress", value = 0, total = 100,  title = "", display_pct = TRUE ),
                                      
-
                                      actionLink("toggleModelOptions", "Toggle the following text"),
                                      conditionalPanel(
                                        condition = "input.toggleModelOptions % 2 == 1",
                                        
-                                       numericInput("ModelNumRules", "Max No. Rules", value=10, min=1, max=200),
-                                       numericInput("ModelExtrapThresh", "Extrapolatio", value=10, min=1, max=200),
-                                       numericInput("ModelFoldNum", "Number of Folds", value=defaultFolds, min=1, max=20),
-                                       numericInput("ModelRepsNum", "Number of Reps", value=defaultReps, min=1, max=20)
+                                       numericInput("ModelNumRules", "Max No. Rules", value=DefNumCubistRules, min=1, max=200),
+                                       numericInput("ModelExtrapThresh", "Extrapolation %", value=defCubistExtrapThresh, min=1, max=200),
+                                       numericInput("ModelFoldNum", "Number of Folds", value=DefNumFolds, min=1, max=50),
+                                       numericInput("ModelRepsNum", "Number of Reps", value=DefNumReps, min=1, max=50)
                                      )
                                      )
                                     
-                                    
-
                         ),
                         mainPanel(
                           fluidPage(
                             fluidRow( 
-                              withSpinner(leafletOutput("RunModelMap", width = "650", height = "450"))
-                              
+                              withSpinner(leafletOutput("RunModelMap", width = "650", height = "450")),
+                              actionLink("toggleModelDetails", "Show the Model Setup Details"),
+                              conditionalPanel(
+                                condition = "input.toggleModelDetails % 2 == 1",
+                                verbatimTextOutput('ModelDetails'))
                               ),
+                              #),
                             fluidRow(htmlOutput('textLabel_CovariateUsage'), rHandsontableOutput("ModelConditionsTable")),
                             fluidRow(div(style="width:200px;",htmlOutput('textLabel_ModelFitStats'), withSpinner(verbatimTextOutput('ModelValidationStats')))),
                             fluidRow(HTML('<br>'), plotOutput("obsVmodPlot", width = "400", height = "400")),
@@ -290,7 +294,8 @@ ui <- tagList(fluidPage(
              tabPanel("Download Data", value ='DownloadDataPanel', icon = icon("download"),
                       wellPanel(
                         selectInput("ModelDownloadSelect", "Download Data", c('Model Package', 'Covariates', 'Sample Files'), width = 200),
-                        downloadButton('ModelDownloadBtn', 'Download')
+                        downloadButton('ModelDownloadBtn', 'Download'),
+                        uiOutput("ModelDownloadLnk")
                       )
              ),
                      
@@ -322,7 +327,7 @@ getProjects <- function(){
 createNewProject<- function(projname, templateRasterTempPath){
   
 
-  dir.create(paste0(rootDir, '/', currentUser, '/', projname))
+  dir.create(paste0(rootDir, '/', currentUser, '/', projname), recursive = T)
   dir.create(paste0(rootDir, '/', currentUser, '/', projname, '/Covariates'))
   dir.create(paste0(rootDir, '/', currentUser, '/', projname, '/Outputs'))
   dir.create(paste0(rootDir, '/', currentUser, '/', projname, '/Samples'))
@@ -335,6 +340,25 @@ createNewProject<- function(projname, templateRasterTempPath){
   
   templatePath <- paste0(rootDir, '/', currentUser, '/', projname, '/GeoTemplate/Template.tif' )
   writeRaster(r, templatePath)
+  
+  m <- r/r
+  pol <- rasterToPolygons(m, dissolve=TRUE)
+
+  polPath <- paste0(rootDir, '/', currentUser, '/', projname, '/GeoTemplate' )
+  writeOGR(pol, polPath, 'Template', driver="ESRI Shapefile")
+  
+  # nr <- nrow(r)  
+  # nc <- ncol(r)  
+  # ds <- 5
+  # z <- nc/ds
+  # marg<-0.01
+  # par(mai=c(marg,marg,marg,marg))
+  # par(oma=c(marg,marg,marg,marg))
+  # 
+  # imagefile <- paste0(rootDir, '/', currentUser, '/', projname, '/GeoTemplate/Template.png' )
+  # png(filename = imagefile,   width = nc/10, height = nr/10, units = "cm", res=150)
+  # plot(r, legend=FALSE, axes=FALSE, box=FALSE)
+  # dev.off()
   
 }
 
@@ -356,8 +380,12 @@ getCovariates <- function(projname){
 
 getSampleFiles <- function(projname){
   paths <- basename( list.files(paste0(rootDir, '/', currentUser, '/', projname, '/Samples'), pattern='.csv', full.names = T, recursive = F))
-  nms2 <- clipPaths <- paths[!grepl('_Drill_Data', paths, ignore.case = T)]
+  nms2 <- paths[!grepl('_Drill_Data', paths, ignore.case = T)]
+  if(length(nms2) >0){
   str_remove(nms2 , '.csv')
+  }else{
+    NULL
+  }
 }
 
 getCovariateStack <- function(projname, reducedRes=F){
@@ -365,9 +393,11 @@ getCovariateStack <- function(projname, reducedRes=F){
   if(reducedRes){
   covpaths <- list.files( covDir, pattern = paste0( '_RedRes.tif$'), full.names = T, recursive =F)
   }else{
-    paths <- list.files( covDir, pattern = paste0( '.tif$'), full.names = T, recursive =F)
-    covpaths <- paths[!grepl('_RedRes', paths, ignore.case = T)]
+    rpaths <- list.files( covDir, pattern = paste0( '.tif$'), full.names = T, recursive =F)
+    covpaths <- rpaths[!grepl('_RedRes', rpaths, ignore.case = T)]
   }
+  
+  
   if(length(covpaths) > 0){
     stk <- stack(covpaths)
   }else{
@@ -384,10 +414,14 @@ getTemplate <- function(projname){
 
 getModelNames <- function(projname){
   nms <- basename( list.files(paste0(rootDir, '/', currentUser, '/', projname, '/Outputs'), pattern='.rds', full.names = T, recursive = T))
+  if(length(nms)>0){
   m1 <- str_remove(nms , '.rds')
   m2 <- str_remove(m1, 'Model!')
   #m3 <- str_split(m2, '!')
   m2
+  }else{
+    NULL
+  }
 }
 
 
@@ -404,7 +438,16 @@ getModelNameFromPath <- function(ModelPath){
 
 server <- function(input, output, session) {
   
-  options(shiny.maxRequestSize=30*1024^2) 
+  cat('yep', file = 'appisrunning.txt')
+  
+  if (!interactive()) {
+    session$onSessionEnded(function() {
+      stopApp()
+      q("no")
+    })
+  }
+  
+  options(shiny.maxRequestSize=30*1024^2, shiny.usecairo=FALSE)
   
   
   RV <- reactiveValues()
@@ -430,8 +473,50 @@ server <- function(input, output, session) {
   
   #RV$ShowMapGenProgress = F
   
+ 
   
   
+  output$SampleSummaryInfo<- renderText({
+    
+    t <- ''
+
+    
+    req(RV$CurrentSampleData)
+    
+    # exflds <- c(1:6)
+    # df <- RV$CurrentSampleData[, -exflds]
+
+    t <- paste0(t, 'Total No. of samples = ', nrow(RV$CurrentSampleData))
+
+    t
+  })
+  
+
+  output$ModelDownloadLnk <- renderUI({
+    
+    if(currentUser == 'LocalPC'){
+      actionLink("ModelDownloadLnkReal","Show Data") 
+    }
+    
+  })
+  
+  observeEvent(input$ModelDownloadLnkReal,{
+    
+    req(input$ModelDownloadSelect)
+    if(input$ModelDownloadSelect == 'Model Package'){
+      ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
+      dPath <- paste0( getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
+
+    }else if(input$ModelDownloadSelect == 'Covariates'){
+      dPath <- paste0( getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject, '/Covariates')
+    }else if(input$ModelDownloadSelect == 'Sample Files'){
+      dPath <- paste0( getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject, '/Samples')
+    }else{
+      dPath <- paste0( getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject)
+    }
+    dPathF <- str_replace_all(dPath, '/', '\\\\')
+    suppressWarnings( shell(paste0("explorer ", dPathF), intern=TRUE))
+  })
   
   observe({
     
@@ -441,28 +526,65 @@ server <- function(input, output, session) {
   
   
   output$textLabel_CovariateUsage <- renderText({
+    req(RV$CurrentModel)
     paste0(('<br><H3>Model Covariate Usage</H3><br>'))
   })
   
   output$textLabel_ModelFitStats <- renderText({
+    req(RV$CurrentModel)
     paste0(('<br><H3>Model Fit Stats</H3><br>'))
   })
   
   output$textLabel_InternalFoldStats<- renderText({
+    req(RV$CurrentModel)
     paste0(('<br><H3>Internal Model Fold Stats</H3><br>'))
   })
   
   output$textLabel_ExternalFoldStats<- renderText({
+    req(RV$CurrentModel)
     paste0(('<br><H3>External Model Fold Stats</H3><br>'))
   })
   
   output$textLabel_ModelSummary<- renderText({
+    req(RV$CurrentModel)
     paste0(('<br><H3>Model Summary</H3><br>'))
   })
   
-  output$projectInfoText <- renderText({
+  
+  
+  output$projectInfoText1 <- renderText({
     req(input$currentProject)
     r <- getTemplate(input$currentProject)
+      
+    rsum <- ''
+    rsum <- paste0(rsum, '<H4><b>Geographic Template</b></H4>')
+    rsum <- paste0(rsum, '<p>Dimensions  : ', dim(r)[1], ' ',dim(r)[2], ' ', dim(r)[1] * dim(r)[2],  ' (nrow, ncol, ncell)<br>')
+    rsum <- paste0(rsum, 'Resolution  : ',format(round(res(r)[1], 5), nsmall = 2) , ' ',format(round(res(r)[2], 5), nsmall = 2), ' (x, y)<br>')
+    rsum <- paste0(rsum, 'Extent      : ', format(round(extent(r)[1], 5), nsmall = 2), ' ',format(round(extent(r)[2], 5), nsmall = 2), ' ', format(round(extent(r)[3], 5), nsmall = 2), ' ', format(round(extent(r)[4], 5), nsmall = 2), '    (xmin, xmax, ymin, ymax) <br>')
+    rsum <- paste0(rsum, 'Projection : ', crs(r), '<br>')
+    rsum <- paste0(rsum, '</p><br>')
+    
+    rsum
+  })
+  
+  output$projectInfoTemplateImage <- renderPlot({
+    r <- getTemplate(input$currentProject)
+    plot(r, legend=FALSE, axes=FALSE, box=FALSE)
+    
+  })
+  
+  # output$projectInfoTemplateImage <- renderImage({
+  #   req(input$currentProject)
+  #   imagefile <- paste0(getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject, '/GeoTemplate/Template.png' )
+  # 
+  #   return(list(src = imagefile)
+  #          )
+  #   
+  # }, deleteFile = F)
+  
+  output$projectInfoText2 <- renderText({
+    req(input$currentProject)
+    
     covs <- getCovariateStack(input$currentProject)
     covsAsList <- paste0('<li>', names(covs), '</li>', collapse = ' ')
     samps <- getSampleFiles(input$currentProject)
@@ -475,18 +597,30 @@ server <- function(input, output, session) {
     modelsAsList <- paste0('<li> Samples = <b>', msamps, '</b> with soil properties = <b>', mprops, '</b> for <b>', mdepths, '</b> Depth</li>', collapse = ' ')
     
     rsum <- ''
-    rsum <- paste0(rsum, '<H4><b>Geographic Template</b></H4>')
-    rsum <- paste0(rsum, '<p>Dimensions  : ', dim(r)[1], ' ',dim(r)[2], ' ', dim(r)[1] * dim(r)[2],  ' (nrow, ncol, ncell)<br>')
-    rsum <- paste0(rsum, 'Resolution  : ',format(round(res(r)[1], 5), nsmall = 2) , ' ',format(round(res(r)[2], 5), nsmall = 2), ' (x, y)<br>')
-    rsum <- paste0(rsum, 'Extent      : ', format(round(extent(r)[1], 5), nsmall = 2), ' ',format(round(extent(r)[2], 5), nsmall = 2), ' ', format(round(extent(r)[3], 5), nsmall = 2), ' ', format(round(extent(r)[4], 5), nsmall = 2), '    (xmin, xmax, ymin, ymax) <br>')
-    rsum <- paste0(rsum, 'Projection : ', crs(r), '<br>')
-    rsum <- paste0(rsum, '</p><br>')
+    
+    
     rsum <- paste0(rsum, '<H4><b>Covariates</b></H4>')
-    rsum <- paste0(rsum, '<ul>', covsAsList, '</ul><br>')
+    if(is.null(covs)){
+      rsum <- paste0(rsum, '<ul>None</ul><br>')
+    }else{
+      rsum <- paste0(rsum, '<ul>', covsAsList, '</ul><br>')
+    }
+    
     rsum <- paste0(rsum, '<H4><b>Soil Sample Files</b></H4>')
-    rsum <- paste0(rsum, '<ul>', sampsAsList, '</ul><br>')
+    #rsum <- paste0(rsum, '<ul>', sampsAsList, '</ul><br>')
+    if(is.null(samps)){
+      rsum <- paste0(rsum, '<ul>None</ul><br>')
+    }else{
+      rsum <- paste0(rsum, '<ul>', sampsAsList, '</ul><br>')
+    }
     rsum <- paste0(rsum, '<H4><b>Existing Models</b></H4>')
-    rsum <- paste0(rsum, '<ul>', modelsAsList, '</ul')
+
+    #rsum <- paste0(rsum, '<ul>', modelsAsList, '</ul')
+    if(is.null(models)){
+      rsum <- paste0(rsum, '<ul>None</ul><br>')
+    }else{
+      rsum <- paste0(rsum, '<ul>', modelsAsList, '</ul><br>')
+    }
     
     rsum
     
@@ -502,11 +636,11 @@ server <- function(input, output, session) {
     filename = function() {
       req(input$ModelDownloadSelect)
       d <- input$ModelDownloadSelect
-      if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
-        ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
-      }else{
-        ModelName <- input$ModelName
-      }
+      #if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
+        ModelName <- input$ExistingModels
+      # }else{
+      #   ModelName <- input$ModelName
+      # }
       
       if(d == 'Model Package'){
         paste0(ModelName, '_ModelPackage.zip')
@@ -521,11 +655,11 @@ server <- function(input, output, session) {
       req(input$ModelDownloadSelect)
       d <- input$ModelDownloadSelect
       
-      if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
-        ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
-      }else{
-        ModelName <- input$ModelName
-      }
+      #if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
+        ModelName <- input$ExistingModels
+      # }else{
+      #   ModelName <- input$ModelName
+      # }
       
       if(d == 'Model Package'){
         outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
@@ -537,14 +671,23 @@ server <- function(input, output, session) {
         outDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples')
         fls <- list.files(outDir, pattern='.csv', full.names = T, recursive = F)
       }
-
-      
-      #fs <- dir(outDir, full.names = F, pattern = '*')
      
-      fn <- paste0( rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/data.zip')
-      zip::zip(fn, fls, recurse=F)
-      
-       file.copy(paste0(fn), file)
+      zipfn <- paste0( getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/data.zip')
+
+      tmpD <-paste0( rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/zipData')
+      dir.create(tmpD, recursive = T)
+      zflsDel <- list.files(tmpD, full.names = T, recursive = F)
+      unlink(zflsDel)
+      file.copy(fls, tmpD)
+      zfls <- list.files(tmpD, full.names = F, recursive = F)
+
+      oldwd <- getwd()
+      setwd(tmpD)
+
+      zip::zip(zipfn, zfls, recurse=F, compression_level=1)
+      setwd(oldwd)
+
+      file.copy(paste0(zipfn), file)
     }
   ) 
   
@@ -557,11 +700,11 @@ server <- function(input, output, session) {
     req(input$ModelDownloadSelect)
     d <- input$ModelDownloadSelect
     
-    if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
-      ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
-    }else{
-      ModelName <- input$ModelName
-    }
+    # if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
+       ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
+    # }else{
+    #  ModelName <- input$ModelName
+    #}
 
     if(d == 'Model Package'){
       outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
@@ -595,8 +738,14 @@ server <- function(input, output, session) {
       if(file.exists(mstatsPath)){
         vt <- read.csv(mstatsPath)
         
-        cccC <- epi.ccc(vt$Observed, vt$Modelled, ci = "z-transform",conf.level = 0.95)
-        r.sqC <- cor(vt$Observed, vt$Modelled)^2
+        # cccC <- epi.ccc(vt$Observed, vt$Modelled, ci = "z-transform",conf.level = 0.95)
+        # r.sqC <- cor(vt$Observed, vt$Modelled)^2
+        gof <- goof(observed = vt$Observed, predicted = vt$Modelled )
+        cccC <- gof$concordance
+        r.sqC <- gof$R2
+        # cccC <- epi.ccc(vt$Observed, vt$Modelled, ci = "z-transform",conf.level = 0.95)
+        # r.sqC <- cor(vt$Observed, vt$Modelled)^2
+        
         fitC <- lm(Modelled~ Observed, data=vt)
         
         minX = min(vt$Observed)
@@ -614,17 +763,14 @@ server <- function(input, output, session) {
           #mtext("subtitle", cex=0.5)
           
           tx =  minX * 1.1
-          print(maxY)
-          ty1 =  maxY * 0.98
-          ty2 =  maxY  * 0.95
+          ty1 =  maxY * 0.99
+          ty2 =  maxY  * 0.94
           
           legPos='bottomright'
-          print(tx)
-          print(ty1)
           #legend(legPos, c('Regression Line') , lty=1, col=c('red'), cex=1, bty="o", bg = 'gray90' )
           legend(legPos, c('Regression Line', '1:1') , lty=1, col=c('red','green'), bty='o', cex=1, bg = 'gray90')
           text(tx,ty1, paste("R2 = ",round(r.sqC, digits = 2)), pos=4)
-          text(tx,ty2, paste("LCCC = ", round(cccC$rho.c[,1], digits = 2)), pos=4)
+          text(tx,ty2, paste("LCCC = ", round(cccC, digits = 2)), pos=4)
           
       }
     }
@@ -724,7 +870,14 @@ server <- function(input, output, session) {
   })
   
   
-  
+  output$ModelDetails<- renderText({
+    req(RV$CurrentModelPath)
+    dPath <-paste0( dirname(RV$CurrentModelPath), '/ModelDescription.txt')
+    if(file.exists(dPath)){
+      l <- readLines(dPath)
+      paste0(l, collapse = '\n')
+    }
+  })
   
   
   
@@ -764,7 +917,7 @@ server <- function(input, output, session) {
       
       crs(SoilData) <- crs(cvstack)
 
-      DSM_data<- extract(cvstack, SoilData, sp = 1, method = "simple")
+      DSM_data<- raster::extract(cvstack, SoilData, sp = 1, method = "simple")
       DSM_data <- as.data.frame(DSM_data)
 
       inDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples' )
@@ -806,10 +959,14 @@ server <- function(input, output, session) {
     sdf4 <- unique(sdf3[c("SiteID", "Easting", "Northing")])
     head(sdf4)
     coordinates(sdf4) <- ~Easting+Northing
-    crs(sdf4) <- crs('+proj=utm +zone=46 +ellps=WGS84 +units=m +no_defs ')
-    psdf <- spTransform(sdf4, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+    templateR <- getTemplate(input$currentProject)
+    crs(sdf4) <- crs(templateR)
+    psdf <- reproject(sdf4)
     
-
+    inBdyPath <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/GeoTemplate' )
+    bdy <- readOGR(inBdyPath, layer = "Template", GDAL1_integer64_policy = TRUE)
+    
+  
     leaflet() %>%
 
       addProviderTiles("Esri.WorldImagery", options = providerTileOptions(noWrap = TRUE), group = "Satelite Image") %>%
@@ -818,6 +975,7 @@ server <- function(input, output, session) {
         data=psdf,
         group = "Soil Samples",
         radius = 2) %>%
+      addPolygons(data=bdy, color = "red", fillColor = NULL,  opacity = 1, fillOpacity = 0) %>%
 
       addLayersControl(
         baseGroups = c("Satelite Image"),
@@ -830,12 +988,17 @@ server <- function(input, output, session) {
   output$ExploreAttSummaryTable <- renderTable({
     req(input$SampleAtt,  RV$CurrentSampleData )
 
-    s <- summary(RV$CurrentSampleData[input$SampleAtt][[1]])
+    fld <- RV$CurrentSampleData[input$SampleAtt][[1]]
+    s <- summary(fld)
 
     dfs <- data.frame(Stat=names(s), Value=round(as.numeric(s[1:7]), digits=4), stringsAsFactors = F)
-    # vad <- length(which(!is.na(mydf2$pH_H2O)))
-    # dfs[8,] <- c('# Valid Vals', vad)
-    # dfs[7,1] <- c('# NA Vals')
+
+     validCnt <- length(which(!is.na(fld)))
+     naCnt <- length(which(is.na(fld)))
+     dfs[7,] <- c('# Locations', length(unique(RV$CurrentSampleData$SiteID)))
+     dfs[8,] <- c('# Records', length(fld))
+     dfs[9,] <- c('# Valid Vals', validCnt)
+     dfs[10,] <- c('# NA Vals', naCnt)
     dfs
   })
   
@@ -877,9 +1040,14 @@ server <- function(input, output, session) {
       
       sdf <-RV$CurrentRawSiteData
       
+      
       sampflds <-  sdf[, input$sampsDataFields]
         
       sampflds2 <- Filter(is.numeric, sampflds)
+      # chki <- which(sapply(sampflds2, is.integer) )
+      # sampflds2[chki] <- lapply(sampflds2[chki], as.numeric)
+      # print( sampflds2[chki])
+      
       
       if(input$sampsStratified != 'None' &  nchar(str_trim(input$sampsStratified))>1 ){
         strat <- sdf[input$sampsStratified]
@@ -899,9 +1067,11 @@ server <- function(input, output, session) {
                           Depth=sdf[input$sampsDepth],
                           Stratifiy=strat,
                           Transect=trans,
-                          sampflds2
+                          sampflds2,
+                          stringsAsFactors = F
                          
       )
+      
       
       
       colnames(newdf)[1:6] <- c('SiteID', 'Easting', 'Northing', 'Depth', 'Stratify', 'Transect')
@@ -914,10 +1084,39 @@ server <- function(input, output, session) {
       spath <- paste0(inDir, '/', input$sampleFileRaw$name)
       write.csv(newdf, spath, row.names = F)
       
-      RV$CurrentSampleDataName <- str_remove(input$sampleFileRaw$name, '.csv')
-      updateSelectInput(session, 'SampleFile',  selected = RV$CurrentSampleDataName)
       
+      
+      
+      RV$CurrentSampleDataName <- str_remove(input$sampleFileRaw$name, '.csv')
+     
+
+      
+      
+      
+      ## check if the location overlay the geographic template
+      sdf4 <- unique(newdf[c("SiteID", "Easting", "Northing")])
+      coordinates(sdf4) <- ~Easting+Northing
+      templateR <- getTemplate(input$currentProject)
+      crs(sdf4) <- crs(templateR)
+      psdf <- reproject(sdf4)
+      deleteShapefile(paste0(inDir, '/', RV$CurrentSampleDataName, '.shp'))
+      writeOGR(psdf, inDir, RV$CurrentSampleDataName, driver="ESRI Shapefile")
+      
+      inBdyPath <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/GeoTemplate' )
+      bdy <- readOGR(inBdyPath, layer = "Template", GDAL1_integer64_policy = TRUE)
+      crs(bdy) <- crs(psdf)
+      
+      a<-over(psdf, bdy)
+      
+      
+      if(all(is.na(a))){
+        shinyalert("Oops!", "It looks as if none of the points in this sample file overlay your area of interest.", type = "error")
+      }
+      
+      samps <- getSampleFiles(input$currentProject)
+      updateSelectInput(session, 'SampleFile', choices = samps, selected = RV$CurrentSampleDataName)
       RV$CurrentSampleData <- newdf
+
 
   })
   
@@ -930,17 +1129,26 @@ server <- function(input, output, session) {
     updateSelectInput(session, 'SampleFile', choices=fls, selected = RV$CurrentSampleDataName)
     fname <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples/', input$SampleFile, '.csv')
     if(file.exists(fname)){
-      RV$CurrentSampleData <- read.csv(fname, stringsAsFactors = F)
+      df <- read.csv(fname, stringsAsFactors = F)
+      exflds <- c(1:6)
+      atts <- df[-exflds]
+      chki <- which(sapply(atts, is.integer) )
+      atts[chki] <- lapply(atts[chki], as.numeric)
+
+      RV$CurrentSampleData <- data.frame(df[1:6], atts, stringsAsFactors = F)
+      
+      nms <- colnames(RV$CurrentSampleData[-exflds])
+      updateSelectInput(session, 'ModelAttribute', choices=nms)
     }
     
-    updateSelectInput(session, 'ModelAttribute', choices=colnames(RV$CurrentSampleData))
+    
   })
   
 
   
   observe({
     req(input$SampleFile)
-    exflds <- c(1:5)
+    exflds <- c(1:6)
     nms <- colnames(RV$CurrentSampleData[-exflds])
     updateSelectInput(session, "SampleAtt", choices = nms )
     
@@ -1189,7 +1397,7 @@ server <- function(input, output, session) {
     inDir <- paste0(rootDir, '/', currentUser)
     projects <- list.dirs(inDir, full.names = F, recursive = F)
     updateSelectInput(session, "currentProject", choices =  projects)
-    RV$CurrentSampleData <- NULL
+
     RV$SampleFileData = NULL
     RV$ProjCovStack = NULL
     RV$CurrentCovariate = NULL
@@ -1231,7 +1439,7 @@ server <- function(input, output, session) {
     projects <- list.dirs(inDir, full.names = F, recursive = F)
     updateSelectInput(session, "currentProject", choices =  projects, selected = input$newProjectname)
     
-    RV$CurrentSampleData <- NULL
+
     RV$SampleFileData = NULL
     RV$ProjCovStack = NULL
     RV$CurrentCovariate = NULL
@@ -1276,97 +1484,6 @@ server <- function(input, output, session) {
   })
   
   
-  # modelPath <- reactive({
-  #   
-  #   mp <- NULL
-  #   if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
-  #     ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
-  #   }else{
-  #     ModelName <- input$ModelName
-  #   }
-  #   outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
-  #   modelPath<- paste0(outDir, "/model!", ModelName, ".rds")
-  #   
-  #   if(file.exists(modelPath)){
-  #     mp <- modelPath
-  #   }else{
-  #     mp <- ''
-  #   }
-  #   
-  # })
-  
-  observe({
-    
-   # req(modelPath)
-    
-    
-    
-    
-  #   if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
-  #     ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
-  #   }else{
-  #     ModelName <- input$ModelName
-  #   }
-  #   outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
-  #   modelPath<- paste0(outDir, "/model!", ModelName, ".rds")
-  # 
-  #   if(file.exists(modelPath)){
-  #     RV$CurrentModelPath <- modelPath
-  #   }
-  #   
-  # })
-  # 
-  # output$RunModelGenerateMap <- renderText({
-  #   
-  #   req(RV$CurrentModel)
-  #   
-  #  
-  #   
-  #   RV$ShowMapGenProgress <- T
-  #   
-  #   stk <- getCovariateStack(input$currentProject)
-  #   templateR <- getTemplate(input$currentProject)
-  #   isolate({ModelName <- RV$CurrentModelName})
-  #   scratchDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/tmpData')
-  #   createDirectory(scratchDir)
-  #   tmpfls <- list.files(scratchDir, full.names =T)
-  #   unlink(tmpfls)
-  #   scratchOutRaster <-  paste0(scratchDir, '/model!', ModelName, '.tif' )
-  #   
-  #   outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
-  #   createDirectory(outDir)
-  #   
-  #   depth <- input$ModelDepth
-  #   
-  #   modelR <- makeMapParra(model=RV$CurrentModel, templateR, stk, depth, outRasterName=scratchOutRaster, numCPUs=NULL, minBlocks=30, tidyUp=F)
-  #   
-  #   modPath <- paste0(outDir, '/model!', ModelName, '.rds')
-  #   
-  #   writeRaster(modelR, paste0(outDir, '/model!', ModelName, '.tif'), overwrite=TRUE)
-  #   saveRDS(RV$CurrentModel, modPath)
-  #   ms <- summary(RV$CurrentModel)
-  #   cat(ms$output, file = paste0(outDir, '/model!', ModelName, '.txt'))
-  #   
-  #   #RV$ShowMapGenProgress <- F
-  #   
-  #   RV$CurrentModelRaster <- modelR
-  #   RV$CurrentModelPath <- modPath
-  #   
-  #   return(" ")
-    
-  })
-  
-  
-  # output$MapGenProgress <- renderText( {
-  #   
-  # 
-  #   if(RV$ShowMapGenProgress){
-  #     #paste0("AAAAAAAAAAAAAAAAAAAAA")
-  #     paste0("<div width=200>The map is being generated<br><img src='mapGenLoader.gif'></div")
-  #   }else{
-  #     paste0(" ")
-  #   }
-  # })
   
   observe({
     
@@ -1377,14 +1494,18 @@ server <- function(input, output, session) {
         if(file.exists(modelPath)){
           model <- readRDS(modelPath)
           if(!is.null(model)){
-              print(modelPath)
               modName <- getModelNameFromPath(modelPath)
-              modRasterPath <- str_replace(modelPath, '.rds', '.tif')
-              modelR <- raster(modRasterPath)
               
               RV$CurrentModel <- model
-              RV$CurrentModelRaster <- modelR
               RV$CurrentModelPath <- modelPath
+              
+              modRasterPath <- str_replace(modelPath, '.rds', '.tif')
+              if(file.exists(modRasterPath)){
+                  #RV$CurrentModelRaster <- modelR
+                  modelR <- raster(modRasterPath)
+              }
+              
+             
           }
         }
   })
@@ -1398,26 +1519,121 @@ server <- function(input, output, session) {
     
     if(UseReducedResRasters){
       rasterPath <- str_replace(RV$CurrentModelPath, '.rds', '_RedRes.tif')
+      covPath <- str_replace(RV$CurrentModelPath, '.rds', '_CoV_RedRes.tif')
+      fifPercPath <- str_replace(RV$CurrentModelPath, '.rds', '_5thPerc_RedRes.tif')
+      ninfifPercPath <- str_replace(RV$CurrentModelPath, '.rds', '_95thPerc_RedRes.tif')
+      rangePath <- str_replace(RV$CurrentModelPath, '.rds', '_UncertRange_RedRes.tif')
       
     }else{
       rasterPath <- str_replace(RV$CurrentModelPath, '.rds', '.tif')
+      covPath <- str_replace(RV$CurrentModelPath, '.rds', '_CoV.tif')
+      fifPercPath <- str_replace(RV$CurrentModelPath, '.rds', '_5thPerc.tif')
+      ninfifPercPath <- str_replace(RV$CurrentModelPath, '.rds', '_95thPerc.tif')
+      rangePath <- str_replace(RV$CurrentModelPath, '.rds', '_UncertRange_RedRes.tif')
     }
     
+    lg <-c()
     
     
-    if(file.exists(rasterPath)){
+   modelR <- raster(rasterPath)
+   resultPal <- colorNumeric("Spectral", values(modelR), na.color = "transparent")
+   
+   lg <-c(lg, "Model Result")
+   modMap <- leaflet(modelR) %>%
+      addProviderTiles("Esri.WorldImagery", options = providerTileOptions(noWrap = TRUE), group = "Satelite Image") %>% 
+     addRasterImage(modelR, colors = resultPal, opacity = 1,  group = "Model Result") 
+   
 
-        modelR <- raster(rasterPath)
-        pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(modelR), na.color = "transparent")
-        leaflet() %>%
-          addProviderTiles("Esri.WorldImagery", options = providerTileOptions(noWrap = TRUE), group = "Satelite Image") %>%
-          addRasterImage(modelR, colors = pal, opacity = 0.8) %>%
-          leaflet::addLegend(pal = pal, values = values(modelR), title = ModelName )
-        
-    }
+     if(file.exists(covPath)){
+       modelRCov <- raster(covPath)
+       #palCoV <- colorNumeric(c("green", 'black', 'yellow'), values(modelRCov), na.color = "transparent")
+       coVPal <- colorNumeric('YlOrRd', values(modelRCov), na.color = "transparent")
+       modMap <- addRasterImage(modMap, modelRCov, colors = coVPal, opacity = 1, group = "Model CoV")  
+       lg <-c(lg, "Model CoV")
+     }
+   
+     if(file.exists(fifPercPath)){
+       modelRfif <- raster(fifPercPath)
+       #palCoV <- colorNumeric(c("green", 'black', 'yellow'), values(modelRCov), na.color = "transparent")
+       fifPal <- colorNumeric('Purples', values(modelRfif), na.color = "transparent")
+       modMap <- addRasterImage(modMap, modelRfif, colors = fifPal, opacity = 1, group = "5th Percentile")  
+       lg <-c(lg, "5th Percentile")
+     }
+   
+     if(file.exists(ninfifPercPath)){
+       modelRninfif <- raster(ninfifPercPath)
+       #palCoV <- colorNumeric(c("green", 'black', 'yellow'), values(modelRCov), na.color = "transparent")
+       ninfifPal <- colorNumeric('Purples', values(modelRninfif), na.color = "transparent")
+       modMap <- addRasterImage(modMap, modelRninfif, colors = ninfifPal, opacity = 1, group = "95th Percentile")  
+       lg <-c(lg, "95th Percentile")
+     }
+   
+     if(file.exists(rangePath)){
+       modelRrange <- raster(rangePath)
+       #palCoV <- colorNumeric(c("green", 'black', 'yellow'), values(modelRCov), na.color = "transparent")
+       rangePal <- colorNumeric('Purples', values(modelRrange), na.color = "transparent")
+       modMap <- addRasterImage(modMap, modelRrange, colors = rangePal, opacity = 1, group = "Uncert Range")  
+       lg <-c(lg, "Uncert Range")
+     }
+   
+   modMap <- addLayersControl(modMap,
+          baseGroups = c("Satelite Image"),
+          #overlayGroups = c('Model Result', 'Model CoV'),
+          overlayGroups = c(lg),
+           options = layersControlOptions(collapsed = FALSE)
+         ) 
+   
+   
+   
+   modMap <- leaflet::addLegend(modMap, pal = resultPal, values = values(modelR), title = "Model Result", group = "Model Result" )
+   if(file.exists(covPath)){
+     modMap <- leaflet::addLegend(modMap, pal = coVPal, values = values(modelRCov), title = "Model CoV", group = "Model CoV" )
+     modMap <- leaflet::hideGroup(modMap, "Model CoV")
+   }
+   if(file.exists(fifPercPath)){
+     modMap <- leaflet::addLegend(modMap, pal = fifPal, values = values(modelRfif), title = "5th Percentile", group = "5th Percentile" )
+     modMap <- leaflet::hideGroup(modMap, "5th Percentile")
+   }
+   if(file.exists(ninfifPercPath)){
+     modMap <- leaflet::addLegend(modMap, pal = ninfifPal, values = values(modelRninfif), title = "95th Percentile", group = "95th Percentile" )
+     modMap <- leaflet::hideGroup(modMap, "95th Percentile")
+   }
+   if(file.exists(rangePath)){
+     modMap <- leaflet::addLegend(modMap, pal = rangePal, values = values(modelRrange), title = "Uncert Range", group = "Uncert Range" )
+     modMap <- leaflet::hideGroup(modMap, "Uncert Range")
+   }
+   
+   modMap
       
   })
   
+  
+  #  observe({
+  #    
+  #    req(RV$CurrentModelPath)
+  #    proxy <- leafletProxy("RunModelMap") 
+  #    print("Proxy")
+  #    covPath <- str_replace(RV$CurrentModelPath, '.rds', '_CoV.tif')
+  #    if(file.exists(covPath)){
+  #      
+  #      modelRCov <- raster(covPath)
+  #      
+  #      pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(modelRCov), na.color = "transparent")
+  #      #lg<-c(lg,"Model CoV")
+  #      proxy %>%  addRasterImage(modelRCov, colors = pal, opacity = 0.8,  group = "Model CoV")
+  #      #modMap %>% hideGroup("Model CoV")
+  #      # leaflet::addLegend(pal = pal, values = values(modelR), title = ModelName )
+  #    }
+  # #   
+  #    proxy %>% addLayersControl(
+  #       baseGroups = c("Satelite Image"),
+  #      overlayGroups = c('Result', 'Model Cov'),
+  #       options = layersControlOptions(collapsed = FALSE)
+  #     ) 
+  # #   
+  # #   proxy
+  # #   
+  # })
   
 
   
@@ -1426,13 +1642,15 @@ server <- function(input, output, session) {
     
     req(RV$CurrentCovDrillData, RV$CurrentSampleData)
     
+    RV$CurrentModelPath <- NULL
+    
    # RV$ShowMapGenProgress <-T
     
-    if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
+    #if(is.null(input$ModelName) | nchar(input$ModelName) < 1){
       ModelName <- paste0(input$SampleFile, '!', input$ModelAttribute, '!', input$ModelDepth)
-    }else{
-      ModelName <- input$ModelName
-    }
+    # }else{
+    #   ModelName <- input$ModelName
+    # }
     
     RV$CurrentModelName <- ModelName
     modOutDir <-paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Models/', ModelName )
@@ -1469,7 +1687,7 @@ server <- function(input, output, session) {
     }
     
     
-    attInd<- which(flds==input$ModelAttribute)
+    attInd <- which(flds==input$ModelAttribute)
     DSM_datasub<- RV$CurrentCovDrillData [c(1, 2, 3, 5, 6,  attInd, 4, (ncol(RV$CurrentSampleData )+1):ncol(RV$CurrentCovDrillData))]
     DSM_datasub<- DSM_datasub[complete.cases(DSM_datasub),]
     DSM_datasub$folds<- NA
@@ -1478,7 +1696,7 @@ server <- function(input, output, session) {
       foldIndex<- which(names(DSM_datasub)=="folds")
       #which(!complete.cases(DSM_datasub[,-foldIndex]))
       
-      nrow(DSM_datasub)
+     # nrow(DSM_datasub)
       
       # stratified k-fold cross-validation
       reps <- as.numeric(input$ModelRepsNum)
@@ -1495,15 +1713,12 @@ server <- function(input, output, session) {
       cnt=1 # iteration counter
       #i=1
       
-      for (r in 1:reps){
+      for (r in 1:input$ModelRepsNum){
         
-        ## permutate the folds in the dataset
-        # split the data into different strata
-        # sp_DSM_datasub<- split(DSM_datasub, DSM_datasub$strata)
-        #for (split in 1:length(sp_DSM_datasub)){
+        if(input$ModelTrainingMethod == 'Simple Random'){
+
         dats1<- DSM_datasub
         sel<- nrow(dats1)
-        
         #random purmutation
         d<- as.factor(rep(sample(1:folds,folds) ,length.out=sel))
         p<-sample(1:sel,sel)
@@ -1513,13 +1728,51 @@ server <- function(input, output, session) {
         DSM_datasub$folds<- d
         
         
+        }else if(input$ModelTrainingMethod == 'Stratified'){
+     
+          sp_DSM_datasub<- split(DSM_datasub, DSM_datasub$Stratify)
+          for (split in 1:length(sp_DSM_datasub)){
+            dats1<- sp_DSM_datasub[[split]]
+            sel<- length(unique(dats1$Transect))
+            
+            #random purmutation
+            d<- as.factor(rep(sample(1:folds,folds) ,length.out=sel))
+            p<-sample(1:sel,sel)
+            d<-d[order(p)]
+            
+            # attribute each fold to each observation on transect
+            selu<- unique(dats1$Transect)
+            for (att in 1:length(unique(dats1$Transect))){
+              sp_DSM_datasub[[split]][which(dats1$Transect==selu[att]),"folds"] <- d[att]
+            }}
+          
+          # melt the lists to a single data frame
+          DSM_datasub<- do.call(rbind.data.frame, sp_DSM_datasub)
+          
+        } else if(input$ModelTrainingMethod == 'Transect Lumped'){
+        print('Transect Lumped')
+          dats1<- DSM_datasub
+          sel<- length(unique(dats1$Transect))
+          
+          #random purmutation
+          d<- as.factor(rep(sample(1:folds,folds) ,length.out=sel))
+          p<-sample(1:sel,sel)
+          d<-d[order(p)]
+          
+          # attribute each fold to each observation on transect
+          selu<- unique(dats1$Transect)
+          for (att in 1:length(unique(dats1$Transect))){
+            DSM_datasub[which(dats1$Transect==selu[att]),"folds"] <- d[att]
+          }
+      }
+        
         # melt the lists to a single data frame
         #DSM_datasub<- do.call(rbind.data.frame, sp_DSM_datasub)
         fmat[r,]<- t(as.matrix(summary(as.factor(DSM_datasub$folds))))
         
         ## do the k-fold cross-validation
        # fcnt<- 1
-        for (f in 1:folds){
+        for (f in 1:input$ModelFoldNum){
 
           updateProgressBar(
             session = session,
@@ -1568,9 +1821,9 @@ server <- function(input, output, session) {
       names(cGoof)<- c("R2", "concordance", "mse", "rmse", "bias")
       vGoof<- as.data.frame(vGoof)
       names(vGoof)<- c("R2", "concordance", "mse", "rmse", "bias")
-      write.csv(cGoof, paste0(outDir, "/model!", ModelName, "!InternalValidation.csv"), row.names = F) 
-      write.csv(vGoof, paste0(outDir, "/model!", ModelName, "!ExternalValidation.csv"), row.names = F) 
-      write.csv(ObsVsModelled, paste0(outDir, "/model!", ModelName, "!ObsVsMod.csv"), row.names = F)
+      write.csv(cGoof, paste0(outDir, "/Model!", ModelName, "!InternalValidation.csv"), row.names = F) 
+      write.csv(vGoof, paste0(outDir, "/Model!", ModelName, "!ExternalValidation.csv"), row.names = F) 
+      write.csv(ObsVsModelled, paste0(outDir, "/Model!", ModelName, "!ObsVsMod.csv"), row.names = F)
     
     stk <- getCovariateStack(input$currentProject)
     templateR <- getTemplate(input$currentProject)
@@ -1579,81 +1832,163 @@ server <- function(input, output, session) {
     createDirectory(scratchDir)
     tmpfls <- list.files(scratchDir, full.names =T)
     unlink(tmpfls)
-    scratchOutRaster <-  paste0(scratchDir, '/model!', ModelName, '.tif' )
+    #scratchOutRaster <-  paste0(scratchDir, )
     
     outDir <-  paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs/', ModelName)
     createDirectory(outDir)
     
     depth <- input$ModelDepth
-    
-    rName <- basename(scratchOutRaster)
-    
-    
-    model<-cub.mod
-
-    covNamesinModel <- getCovariatesUsedInModel(model)
+    rName <- paste0('Model!', ModelName, '.tif' )
     
     numCPUs = detectCores()-1
     cat(paste0('Using ', numCPUs, ' cores'), sep='\n')
     
-    
-    bs <- blockSize(stk, minblocks = minBlocks)
+    cl<-makeCluster(numCPUs)
+    registerDoParallel(cl)
+    bs <- blockSize(stk, minblocks = numChunks)
+    minBlocks <- bs$n
+    pp <- ceiling(minBlocks/numCPUs)
     saveRDS(bs, paste0(scratchDir, '/brickInfo.rds'))
     cat(paste0('Using ', bs$n, ' blocks'), sep='\n')
-    cl <- makeSOCKcluster(numCPUs)
-    registerDoSNOW(cl)
+
     
-    
-    pp <- ceiling(minBlocks/numCPUs)
-    
-    cntr=1
-    lcnt <-0
-    for (i in 1:pp) {
+
+    if(!input$ModelRunDoUncert){
       
-      updateProgressBar(
-        session = session,
-        id = "modelRunProgress",
-        value = i, total = pp,
-        title = paste("Generating Map....")
-      )
+      model<-cub.mod
+      covNamesinModel <- getCovariatesUsedInModel(model)
       
-      totCnt <- min((i * numCPUs), minBlocks)
-      kst <- lcnt*numCPUs+1
-      r <- foreach(k=kst:totCnt,  .packages=c('raster','rgdal', 'Cubist'), .export = c('applyMapParallelWithDepth')) %dopar% applyMapParallelWithDepth(model, templateR, stk, depth, scratchDir, bs, covNamesinModel)
-      lcnt <- lcnt + 1
-      cntr <- cntr+1
+      cntr=1
+      lcnt <-0
+      for (i in 1:pp) {
+        updateProgressBar(session = session,id = "modelRunProgress",value = i, total = pp,title = paste("Generating Map...."))
+        totCnt <- min((i * numCPUs), minBlocks)
+        kst <- lcnt*numCPUs+1
+        r <- foreach(k=kst:totCnt,  .packages=c('raster','rgdal', 'Cubist'), .export = c('applyMapParallelWithDepth')) %dopar% applyMapParallelWithDepth(model, templateR, stk, depth, scratchDir, bs, covNamesinModel)
+        lcnt <- lcnt + 1
+        cntr <- cntr+1
+        }
+      
+      rpath <- paste0(outDir, '/Model!', ModelName, '.tif')
+      modelR <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpath)
+      aggregate(modelR, rasterResFactor, filename=paste0(outDir, '/Model!', ModelName, '_RedRes.tif'))
+      
+    }else{
+      
+      mPfs <- list.files(modOutDir, '.rds', full.names = T)
+      models <- lapply(mPfs,function(i){ readRDS(i)})
+      covsinMod <- lapply(models,function(i){ getCovariatesUsedInModel(i)})
+      covNamesinModel <- unique(do.call(c, covsinMod))
+      
+      cntr=1
+      lcnt <-0
+      for (i in 1:pp) {
+        updateProgressBar(session = session,id = "modelRunProgress",value = i, total = pp,title = paste("Generating Map...."))
+        totCnt <- min((i * numCPUs), minBlocks)
+        kst <- lcnt*numCPUs+1
+        r <- foreach(k=kst:totCnt,  .packages=c('raster','rgdal', 'Cubist'), .export = c('applyMapParallelWithDepthBooty')) %dopar% applyMapParallelWithDepthBooty(models, templateR, stk, depth, scratchDir, bs, covNamesinModel,doCIs=T)
+        lcnt <- lcnt + 1
+        cntr <- cntr+1
+      }
+      
+      
+      updateProgressBar(session = session,id = "modelRunProgress",value = 0, total = 5, title = paste("Generating Uncert Products"))
+      rpath <- paste0(outDir, '/Model!', ModelName, '.tif')
+      modelR <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpath, outType = 'mean')
+      aggregate(modelR, rasterResFactor, filename=paste0(outDir, '/Model!', ModelName, '_RedRes.tif'), overwrite = T)
+      
+      updateProgressBar(session = session,id = "modelRunProgress",value = 0, total = 5, title = paste("Generating Uncert Products"))
+      rpathCoV <- paste0(outDir, '/Model!', ModelName, '_CoV.tif')
+      modelRCoV <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpathCoV, outType = 'CoV')
+      aggregate(modelRCoV, rasterResFactor, filename=paste0(outDir, '/Model!', ModelName, '_CoV_RedRes.tif'), overwrite = T)
+      
+      updateProgressBar(session = session,id = "modelRunProgress",value = 2, total = 5, title = paste("Generating Uncert Products"))
+      rpath5<- paste0(outDir, '/Model!', ModelName, '_5thPerc.tif')
+      modelR5 <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpath5, outType = '5')
+      aggregate(modelR5, rasterResFactor, filename=paste0(outDir, '/Model!', ModelName, '_5thPerc_RedRes.tif'), overwrite = T)
+      
+      updateProgressBar(session = session,id = "modelRunProgress",value = 3, total = 5, title = paste("Generating Uncert Products"))
+      rpath95 <- paste0(outDir, '/Model!', ModelName, '_95thPerc.tif')
+      modelR95 <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpath95, outType = '95')
+      aggregate(modelR95, rasterResFactor, filename=paste0(outDir, '/Model!', ModelName, '_95thPerc_RedRes.tif'), overwrite = T)
+      
+      updateProgressBar(session = session,id = "modelRunProgress",value = 4, total = 5, title = paste("Generating Uncert Products"))
+      rpathRange <- paste0(outDir, '/Model!', ModelName, '_UncertRange.tif')
+      udif <- modelR95 - modelR5
+      writeRaster(udif, rpathRange, overwrite=T)
+      aggregate(udif, rasterResFactor, filename=paste0(outDir, '/Model!', ModelName, '_UncertRange_RedRes.tif'), overwrite = T)
+      
     }
-    
+   
     stopCluster(cl)
-    
-    modelR <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rName)
     
     tidyUp=T
     if(tidyUp){
       unlink(scratchDir, recursive = T)
     }
 
-    modPath <- paste0(outDir, '/model!', ModelName, '.rds')
-    
-    writeRaster(modelR, paste0(outDir, '/model!', ModelName, '.tif'), overwrite=TRUE)
-    
-    #if(UseReducedResRasters){
-      aggregate(modelR, rasterResFactor, filename=paste0(outDir, '/model!', ModelName, '_RedRes.tif'))
-    #}
-
-
+    modPath <- paste0(outDir, '/Model!', ModelName, '.rds')
+    model <- readRDS(modPath)
     ms <- summary(model)
-    cat(ms$output, file = paste0(outDir, '/model!', ModelName, '.txt'))
+    cat(ms$output, file = paste0(outDir, '/Model!', ModelName, '.txt'))
     
-    updateProgressBar(
-      session = session,
-      id = "modelRunProgress",
-      value = 0, total = 0,
-      title = paste("")
-    )
+    descPath <- paste0(outDir, '/ModelDescription.txt')
+    cat('Model Name : ', ModelName, '\n', sep = '', append = F, file = descPath)
+    cat('Run on :  ', format(Sys.time()), '\n', sep = '', append = T, file = descPath)
+    si <- Sys.info()
     
-    #updateTabsetPanel(session, inputId="inTabset", selected="DownloadDataPanel")
+    cat('Run by :  ', si[['user']], '\n', sep = '', append = T, file = descPath)
+    cat('Project : ', input$currentProject, '\n', sep = '', append = T, file = descPath)
+    cat('Sample File : ', input$SampleFile, '\n', sep = '', append = T, file = descPath)
+    cat('Attribute : ', input$ModelAttribute, '\n', sep = '', append = T, file = descPath)
+    cat('Depth : ', input$ModelDepth, '\n', sep = '', append = T, file = descPath)
+    cat('Description : ', input$ModelDescription, '\n', sep = '', append = T, file = descPath)
+    cat('\n', sep = '', append = T, file = descPath)
+    
+    cat('\nTraining Data\n', sep = '', append = T, file = descPath)
+    cat('--------------\n', sep = '', append = T, file = descPath)
+    cat('Number of Samples : ', nrow(DSM_datasub), '\n', sep = '', append = T, file = descPath)
+    cat('Number of Locations: ', length(unique(DSM_datasub$SiteID)), '\n', sep = '', append = T, file = descPath)
+    cat('Minimum ', input$ModelAttribute, ' value : ', min(DSM_datasub[,6]), '\n', sep = '', append = T, file = descPath)
+    cat('Maximum ', input$ModelAttribute, ' value : ', max(DSM_datasub[,6]), '\n', sep = '', append = T, file = descPath)
+    cat('Mean ', input$ModelAttribute, ' value : ', mean(na.omit(DSM_datasub[,6])), '\n', sep = '', append = T, file = descPath)
+    cat('Std Dev of ', input$ModelAttribute, ' values : ', sd(DSM_datasub[,6], na.rm = T), '\n', sep = '', append = T, file = descPath)
+    cat('Depth Range : ', min(DSM_datasub$Depth), ' to ', max(DSM_datasub$Depth), '\n', sep = '', append = T, file = descPath)
+    cat('\n', sep = '', append = T, file = descPath)
+    
+    cat('\nCovariates\n', sep = '', append = T, file = descPath)
+    cat('----------\n', sep = '', append = T, file = descPath)
+    covs <- getCovariateStack(input$currentProject)
+    covsAsList <- paste0( names(covs),  collapse = '\n')
+    cat(covsAsList, '\n\n', sep = '', append = T, file = descPath)
+    
+    cat('\nModel Parameters\n', sep = '', append = T, file = descPath)
+    cat('----------------\n', sep = '', append = T, file = descPath)
+    cat('Model Type : ', input$MLType, '\n', sep = '', append = T, file = descPath)
+    cat('Training Method : ', input$ModelTrainingMethod, '\n', sep = '', append = T, file = descPath)
+    cat('Max No. Rules : ', input$ModelNumRules,'\n', sep = '', append = T, file = descPath)
+    cat('Model Extrapolation Threshold : ', input$ModelExtrapThresh,'\n', sep = '', append = T, file = descPath)
+    cat('Number of Folds : ', input$ModelFoldNum,'\n', sep = '', append = T, file = descPath)
+    cat('Number of Reps : ', input$ModelRepsNum,'\n', sep = '', append = T, file = descPath)
+    cat('Generate Uncertainties : ', input$ModelRunDoUncert,'\n', sep = '', append = T, file = descPath)
+    
+    cat('\n\nModel Outputs\n', sep = '', append = T, file = descPath)
+    cat('----------------\n', sep = '', append = T, file = descPath)
+    fls <- list.files(outDir)
+    flsAsList <- paste0( fls,  collapse = '\n')
+    cat(flsAsList, '\n', sep = '', append = T, file = descPath)
+    cat('\n', sep = '', append = T, file = descPath)
+    cat('\n', sep = '', append = T, file = descPath)
+    cat('\n', sep = '', append = T, file = descPath)
+    
+   
+    
+  
+    
+    updateProgressBar(session = session,id = "modelRunProgress",value = 0, total = 0, title = paste(""))
+    
     updateSelectInput(session, 'ExistingModels', choices = getModelNames(input$currentProject),  selected = ModelName)
+    RV$CurrentModelPath <- modelFile
 
   })
   
@@ -1672,11 +2007,14 @@ server <- function(input, output, session) {
   })
   
   
-  observe({
-    req(input$currentProject, input$SampleFile)
-    state <- read.csv(paste0(rootDir, '/', currentUser, '/state.cfg'), sep = "=", header = F )
-    
-  })
+  # observe({
+  #   req(input$currentProject, input$SampleFile)
+  #   stf <- paste0(rootDir, '/', currentUser, '/state.cfg')
+  #   if(file.exists(stf)){
+  #     state <- read.csv(stf, sep = "=", header = F )
+  #   }
+  #   
+  # })
   
   
   
@@ -1688,7 +2026,13 @@ server <- function(input, output, session) {
     updateSelectInput(session, "currentProject", choices =  projects, selected =  previousProj)
   })
   
+  observe({
+    inDir <- paste0(rootDir, '/', currentUser)
+    samps <- getSampleFiles(input$currentProject)
+    updateSelectInput(session, "SampleFile", choices =  samps, selected =  previousSamples)
 
+  })
+  
   
   observe({
     req(RV$ProjCovStack)
@@ -1754,109 +2098,75 @@ server <- function(input, output, session) {
   })
   
   
+  output$covPlots<- renderPlot({
+    
+    req(input$currentProject)
+    
+    RV$ProjCovStack
+    stk <- getCovariateStack(input$currentProject)
+    
+    if(!is.null(stk)){
+    
+    stk <- getCovariateStack(input$currentProject, UseReducedResRasters)
+    plot(stk, nc = 4, nr = 5)
+    }else{
+      NULL
+    }
+  })
+  
   output$covImage<- renderImage({
-    
+
+
     req(RV$ProjCovStack )
-    
+
+    stk <- getCovariateStack(input$currentProject, UseReducedResRasters)
+
+
     nc <- 3
     psize = 10
     marg = 0.1
-    
+
+    par(mai=c(marg,marg,marg,marg))
+
     stk <- getCovariateStack(input$currentProject, UseReducedResRasters)
-    
+
     nlayers(stk)
     names(stk) <- str_remove(names(stk), '_RedRes')
     nr <- ceiling(nlayers(stk)/nc)
-    
-    
-    outfile <- tempfile(pattern = 'covs_', fileext = '.png')
-    #outfile <- paste0( rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/AllCovsPlot.png')
+
+
+    #outfile <- tempfile(pattern = 'covs_', fileext = '.png')
+    outfile <- paste0(getwd(), '/', rootDir, '/', currentUser, '/', input$currentProject, '/Covariates/AllCovsPlot.png')
+
 
     png(filename = outfile,   width = psize * nc, height = psize * nr, units = "cm", res=150)
-    nf <- layout(matrix(seq(1,(nc*nr)), nr, nc, byrow = TRUE), respect = TRUE, widths=c(lcm(psize),lcm(psize)), heights=c(lcm(psize),lcm(psize)))
-    
+    mat <- matrix(seq(1,(nc*nr)), nr, nc, byrow = TRUE)
+    nf <- layout(mat, widths = rep.int(1, ncol(mat)), heights = rep.int(1, nrow(mat)))
+
+
     for (i in 1:nlayers(stk)) {
       plot(stk[[i]],  main=paste0(names(stk)[i]), cex.main=2)
     }
-    
+
     dev.off()
     #dev.off()
-    
+
     list(src = outfile,
         contentType = 'image/png',
         width = psize * nc * 30,
         height =  psize * nr * 30,
         alt = "Available Covariate Rasters")
-    
-  }, deleteFile = T)
+
+
+
+  }, deleteFile = F)
   
   
-  # output$covPlots <- renderPlot({
-  #   
-  # 
-  #   req(RV$ProjCovStack )
-  #   stk <- getCovariateStack(input$currentProject, UseReducedResRasters)
-  #   
-  #   nc <- 3
-  #   psize = 2
-  #   marg = .5
-  #   
-  #   nlayers(stk)
-  #   nr <- ceiling(nlayers(stk)/nc)
-  #   
-  #   
-  #   png(filename = paste0( 'c:/temp/aaaplot.png'),   width = psize * nc, height = psize * nr, units = "cm", res=150)
-  #   
-  #   #windows()
-  #   par(mar=c(marg,marg,marg,marg))
-  #   nf <- layout(matrix(seq(1,(nc*nr)), nr, nc, byrow = TRUE), respect = TRUE, widths=c(lcm(psize),lcm(psize)), heights=c(lcm(psize),lcm(psize)))
-  #   
-  #   p<- NULL
-  #   for (i in 1:nlayers(stk)) {
-  #     
-  #   p <-  plot(stk[[i]],  main=paste0(names(stk)[i]))
-  #     
-  #     
-  #   }
-  #   dev.off()
-  #   
-  #   p
-  #   
-  #   
-  #  # plot(stk)
-  # })
-  
-  # output$SplinePlot <- renderPlot({
-  #   req(RV$CurrentSplineFile)
-  #   
-  #   
-  #   spls <- RV$CurrentSplineFile
-  #   
-  #   stdDeps <- c('2.5', '10', '22.5', '45', '80', '150')
-  #   
-  #   sid <- which(spls$harmonised$id == as.numeric(input$SampleSite))
-  #   pstd <- spls$harmonised[sid,]
-  #   
-  #   d = spls$var.1cm[,sid]
-  #   minx <- min(d) - min(d) * 0.2
-  #   maxx <- max(d) + max(d) * 0.2
-  #   plot( d, 1:length(d), type="n", main=paste( paste0('Spline of ', input$SampleAtt, ' at ', input$SampleSite)), xlab = input$SampleAtt, ylab = "Depth", yaxs = "i", xaxs = "i", xlim = c(minx, maxx), ylim = rev(range(c(0,200))))
-  #   lines( d, 1:length(d), type="l") 
-  #   stdVals <- c(spls$harmonised$`0-5 cm`[sid], spls$harmonised$`5-15 cm`[sid], spls$harmonised$`15-30 cm`[sid], spls$harmonised$`30-60 cm`[sid], spls$harmonised$`60-100 cm`[sid], spls$harmonised$`100-200 cm` [sid])
-  #   stdPts <- data.frame(stdDeps, stdVals)
-  #   points(stdVals, stdDeps, col='red', pch=19)
-  #   
-  # })
-  
-  
+
   
   observe({
     req(input$currentProject )
-    
-    # createDirectory(paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Covariates' ))
-    # createDirectory(paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples' ))
-    # createDirectory(paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Outputs' ))
-    
+  
     covDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Covariates' )
     paths <- list.files( paste0(covDir), pattern = paste0('[a-zA-Z0-9\\/_:-]*', '.tif$'), full.names = T, recursive =F)
     if(length(paths) > 0){
@@ -1865,93 +2175,6 @@ server <- function(input, output, session) {
       RV$ProjCovStack <- NULL
     }
   })
-  
-  
-  
-  
- 
-  
-  
-  # output$UploadSamplesTable <- renderRHandsontable({
-  #   
-  #   req(input$sampleFile)
-  #   isolate({
-  #     sampName <- str_remove(input$sampleFile$name, '.csv')
-  #     
-  #     sampDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples' )
-  #     outPath <- paste0(sampDir, '/', sampName, '.csv')
-  #     file.copy(input$sampleFile$datapath, outPath)
-  #   })
-  #   
-  #   
-  #   inDir <- paste0(rootDir, '/', currentUser, '/', input$currentProject, '/Samples' )
-  #   paths <- list.files( paste0(inDir), pattern = paste0('[a-zA-Z0-9\\/_:-]*', '.csv$'), full.names = F, recursive =F)
-  #   if(length(paths) > 0)
-  #   {
-  #     updateSelectInput(session, "SampleFile", choices =  str_remove(paths, '.csv'))
-  #   }
-  #   
-  #   tryCatch(
-  #     {
-  #       df <- read.csv(outPath,
-  #                      header = T,
-  #                      sep = ',',
-  #                      quote = '"',
-  #                      stringsAsFactors = F)
-  #       
-  #       stddf <- df[with(df, order(sid, Attribute, UpperDepth)),]
-  #       
-  #       RV$SampleFields <- stddf
-  #       
-  #       atts <- unique(stddf$Attribute)
-  #       
-  #       
-  #       spDir <- paste0(inDir, '/', sampName)
-  #       createDirectory(paste0(spDir))
-  #       for (i in 1: length(atts)) {
-  #         att <- atts[i]
-  #         spdf <- stddf[stddf$Attribute==att, c(1,4,5,7)]
-  #         sp.fit <- ea_spline(spdf, var.name='Val')
-  #         saveRDS(sp.fit, paste0(spDir, '/', att, '_spline.rds'))
-  #         
-  #       }
-  #       
-  #       rhandsontable(df,  height = 600, manualColumnResize = T, readOnly = TRUE, rowHeaders = F) 
-  #     },
-  #     error = function(e) {
-  #       stop(safeError(e))
-  #     }
-  #   )
-  # })
-  
-  
-  
-  
-  
-  # output$UploadSamplesMap <- renderLeaflet({
-  #   
-  #   req(RV$SampleFileData )
-  #   
-  #   inDF <- RV$SampleFileData 
-  #   att <- input$SampleAtt
-  #   sdf <- inDF[inDF$Attribute == att, ]
-  #   coordinates(sdf) <- ~x+y
-  #   
-  #   leaflet() %>%
-  #     
-  #     addProviderTiles("Esri.WorldImagery", options = providerTileOptions(noWrap = TRUE), group = "Satelite Image") %>%
-  #     
-  #     addCircleMarkers(
-  #       data=sdf,
-  #       group = "Soil Samples",
-  #       radius = 2) %>%
-  #     
-  #     addLayersControl(
-  #       baseGroups = c("Satelite Image"),
-  #       overlayGroups = c("Soil Samples"),
-  #       options = layersControlOptions(collapsed = FALSE)
-  #     ) 
-  # })
   
   
   

@@ -1,4 +1,4 @@
-
+library(raster)
 
 
 
@@ -539,5 +539,172 @@ m <- leaflet() %>%
   addTiles() %>%  # Add default OpenStreetMap map tiles
   
 m  # Print the map
+
+source('C:/Projects/Myanmar/RInno/DSMTools/ShinyApp/mylibs/ithirSub.R')
+gof <- goof(observed = c(1,2, 3, 4) , predicted = c(1.2, 1.9, 3.3, 3.7) )
+
+
+
+
+
+covDir <- paste0( 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/r4/Covariates' )
+covpaths <- list.files( covDir, pattern = paste0( '_RedRes.tif$'), full.names = T, recursive =F)
+stk <- stack(covpaths)
+
+
+raster(covpaths[[6]])
+
+
+
+
+covDir <- paste0( 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/r4/Covariates' )
+covpaths <- list.files( covDir, pattern = paste0( '_RedRes.tif$'), full.names = T, recursive =F)
+stk <- stack(covpaths)
+
+nc <- 3
+psize = 10
+marg = 0.1
+
+par(mai=c(marg,marg,marg,marg))
+
+stk <- getCovariateStack(input$currentProject, UseReducedResRasters)
+
+nlayers(stk)
+names(stk) <- str_remove(names(stk), '_RedRes')
+nr <- ceiling(nlayers(stk)/nc)
+
+
+outfile <- 'c:/temp/a.png'
+#outfile <- paste0( rootDir, '/', currentUser, '/', input$currentProject, '/tmpData/AllCovsPlot.png')
+
+png(filename = outfile,   width = psize * nc, height = psize * nr, units = "cm", res=150)
+mat <- matrix(seq(1,(nc*nr)), nr, nc, byrow = TRUE)
+nf <- layout(mat, widths = rep.int(1, ncol(mat)), heights = rep.int(1, nrow(mat)))
+
+for (i in 1:nlayers(stk)) {
+  plot(stk[[i]],  main=paste0(names(stk)[i]), cex.main=2)
+}
+
+dev.off()  
+  
+ 
+
+  plot(stk[[1]], legend=FALSE, axes=FALSE, box=FALSE)
+  
+  
+  
+r <- raster('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/p4/GeoTemplate/Template.tif')
+nr <- nrow(r)  
+nc <- ncol(r)  
+
+ds <- 30
+z <- nc/ds
+
+marg<-0.01
+par(mai=c(marg,marg,marg,marg))
+par(oma=c(marg,marg,marg,marg))
+imagefile <- paste0('c:/temp/aTemplate.png' )
+png(filename = imagefile,   width = nc/z, height = nr/z, units = "cm", res=150)
+plot(r, legend=FALSE, axes=FALSE, box=FALSE)
+dev.off()  
+  
+  
+showMethods("plot")
+getMethod("plot", c("Raster", "ANY"))
+  
+
+
+paths <- list.files( paste0('C:/Projects/Myanmar/MarkData'), pattern = paste0('[a-zA-Z0-9\\/_:-]*', '.tif$'), full.names = T, recursive =F)
+stk <- stack(paths)
+brk <- brick(stk)
+plot(brk, nc=5, nr=5)
+
+
+
+df <- read.csv('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/r4/Samples/20181018-PYB_data.csv')
+s <- as.data.frame.matrix(summary(df))
+head(s)
+
+
+r <- readRDS('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Brendan/tmpData/r_CoV_11.rds')
+r  
+
+templateR <- raster('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Brendan/GeoTemplate/Template.tif')
+scratchDir <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Brendan/tmpData'
+rpath <- paste0('c:/temp/a.tif')
+modelR <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpath, outType = 'mean')  
+
+
+
+SoilData <- read.csv('c:/temp/us.csv')
+CurrentSampleDataFields <- names(SoilData)
+head(SoilData)
+coordinates(SoilData) <- ~Longitude + Latitude
+plot(SoilData)
+
+cvstack<- getCovariateStack(input$currentProject)
+covDir <- paste0('C:/Projects/Myanmar/BrendanData')
+covpaths <- list.files( covDir, pattern = paste0( '.tif$'), full.names = T, recursive =F)
+cvstack <- stack(covpaths)
+crs(SoilData) <- crs(cvstack)
+
+DSM_data<- raster::extract(cvstack, SoilData, sp = 1, method = "simple")
+DSM_data <- as.data.frame(DSM_data)
+
+
+
+for (i in 1: length(covpaths)){
+  r <- raster(covpaths[i])
+ rp <- reproject(r)
+  plot(rp)
+  outname <- paste0('c:/temp/rp/', basename(covpaths[i]))
+  writeRaster(rp, outname, overwrite = T)
+  
+}
+
+
+r <- raster('C:/Temp/rp/AACN.tif')
+r
+
+
+df <- read.csv('C:/Temp/us.csv')
+flds <- c(1:6)
+atts <- df[, -flds ]
+head(atts)
+str(atts)
+chkn <- which(sapply(atts, is.numeric) )
+
+names(chk[chk==T])
+chki <- which(sapply(atts, is.integer) )
+
+atts[chki] <- lapply(atts[chki], as.numeric)
+
+
+df[!duplicated(df[1:2]),]
+
+
+bdy <- readOGR('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Demo/GeoTemplate', layer = "Template", GDAL1_integer64_policy = TRUE)
+
+newdf <- read.csv('c:/temp/DemoSamples.csv')
+newdf <- read.csv('c:/temp/us.csv')
+pts <- unique(newdf[c("s_id", "Longitude", "Latitude")])
+head(pts)
+coordinates(pts) <- ~Longitude+Latitude
+
+crs(pts) <- NULL
+crs(bdy) <- NULL
+
+a<-over(pts, bdy)
+sum(na.omit(a))
+
+
+p <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Demo/Outputs/DemoSamples!pH!5/ModelDescription.txt'
+
+l <- readLines(p)
+paste0(l, collapse = '\n')
+
+
+
+
 
 
