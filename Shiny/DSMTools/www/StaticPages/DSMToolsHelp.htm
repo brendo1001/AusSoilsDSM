@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Demo</title></head><body>
+<p style="font-family: Calibri; color: rgb(0, 119, 0); font-weight: bold;"><big><big><big><span style="font-family: Arial Black; color: rgb(0, 0, 153);">DSMTools Help</span><br>
+</big></big></big></p>
+<p style="font-family: Arial Black; color: red;"></p>
+
+
+<h2><b style=""><span style="font-size: 22pt; line-height: 105%; font-family: &quot;Arial Black&quot;,sans-serif; color: rgb(84, 130, 53);"><span style="color: windowtext;"><span style="color: rgb(0, 102, 0);">Overview</span><o:p></o:p></span></span></b></h2>
+
+
+
+
+<p class="MsoNormal"><span style="font-size: 12pt; line-height: 105%; font-family: &quot;Arial&quot;,sans-serif; color: black;">DSM Tools is an App for generating soil
+property maps using Digital Soil Mapping (DSM) techniques, without needing to
+know the details of what is happening behind the scenes. You supply your soil
+sample data and set of environmental covariate rasters, and it will generate
+maps of your chosen soil properties.</span></p>
+<p style="font-family: Calibri;" class="MsoNormal"><big>The Appp uses
+the concept of Projects, within which you upload a set of covariates
+rasters, your soil sample data and generate a series of statistically
+modelled soil maps using Machine Learning Algorithms. You work your way
+from left to right on the tabs at the top of the page to undertake the
+DSM modelling</big></p>
+<h2><big><small style="color: rgb(0, 102, 0);"><span style="font-family: Arial Black;">1. Projects</span></small><br>
+</big></h2>
+<p style="font-family: Calibri;" class="MsoNormal"><big>You begin the
+DSM workflow by creating a new project. You need to supply a name and
+upload a Spatial "Template" raster as a geoTif file. This template will
+control the extent and resolution of all subsequent DSM Modelling
+products. If you have an existing project, you can select it here and
+move on to the rest of the workflow. Projects can be deleted and
+renamed here as well. Once you delete a raster, all the data and the
+generated modelling products associated with the project are also
+permanently deleted as well.</big></p>
+<p style="font-family: Calibri;" class="MsoNormal"><br>
+</p>
+<h2><big><small style="color: rgb(0, 102, 0);"><span style="font-family: Arial Black;">2. Covariate Rasters<br>
+</span></small></big></h2>
+
+<p style="font-family: Calibri;" class="MsoNormal">The "Covariates Rasters' Tab allows you to upload, view and transform raster covariates to be used in your DSM.&nbsp;</p>
+<h3><span style="font-family: Calibri;">Upload</span></h3>
+In the "Currently Available Project Covariates" tab you click the
+browse button to select covariates from your local machine that you
+wish to upload to DSMTool. When they are uploaded, the new covariates
+will automatically be reprojected and resized to match the project
+template raster. Presently only Geotif rasters are accepted by
+DSMTools. The filename of the uploaded covariate rasters will be used
+to identify the rasters in DSMTools. <br>
+<br>
+An image of all the existing available covariate rasters will also be displayed on the right<br>
+<br>
+<h3 style="font-family: Calibri;">Explore</h3>
+Selecting a covariate in the "Available Covariates" dropdown, will
+dipslay a map of the covariate abd show some statistics about the
+current covariate raster. Some simple transformation can also be
+applied to the selected covariate to produce new covariate rasters, by
+using the tools on the left of the tab in the "Transform Values" tab.<br>
+<br>
+Covariates can also be deleted and renamed in this tab.<br>
+<br>
+<h2><big><small style="color: rgb(0, 102, 0);"><span style="font-family: Arial Black;">3. Soil Sample Data<br>
+</span></small></big></h2>
+<h3><span style="font-family: Calibri;">Upload</span></h3>
+
+This tab allows you to upload soil sample files to be used in the DSM
+modelling. Click on the browse button to select a csv file to be
+uploaded to DSM tools. The image below shows the format that the file
+needs to be in to be read correctly by DSMTools.<br>
+<br>
+<img style="width: 1200px; height: 377px;" alt="Soil sample data format" src="http://shiny.esoil.io/DSMTools/CSVDataFormat.png"><br>
+
+<p style="font-family: Calibri;" class="MsoNormal"><big>You are required to supply fields containing data describing,&nbsp; the Site Identifier, the Location of the soil sample sites (eg Easting &amp; Northing) and the Depth at which the sample was taken.
+You can optionally supply fields for Transect Ids and Stratification
+IDS, which can be used optionally in the subsequent modelling..</big></p>
+<p style="font-family: Calibri;" class="MsoNormal"><big>When the file is uploaded, DSMTools will automatically try to guess the field names in your file for these required fields.
+If matches are not automatically made you are required to manually
+chose the correct fields. You must also specify a numerical value for
+the&nbsp; NA value in your data file. The renaming fields that you wish
+to import (ie values for soil properties to be modelled) can be selected in the "Sample Data Fields" list box.</big></p>
+<big><span style="font-family: Calibri;">You then need to click the
+"Process My Data" button to make the sample data available in the
+current project. The imported table will be diplayed on the right</span></big><br>
+<br>
+<h3><span style="font-family: Calibri;">Explore Sample Data</span></h3>
+<big><span style="font-family: Calibri;">You can select individual soil
+properties from the combo box on the left to show a range of statistics
+for this particular soil attribute.</span><br style="font-family: Calibri;">
+<br style="font-family: Calibri;">
+<span style="font-family: Calibri;">The Attribute selected here is the
+one that will be used in subsequent modelling. ie if you want to cahnge
+the value to be modelled, you need to come back to this combo box and
+select the required soil attribute.</span></big><br>
+<br>
+<h2><big><small style="color: rgb(0, 102, 0);"><span style="font-family: Arial Black;">4. Drill Covariate Rasters<br>
+</span></small></big></h2>
+
+<span style="font-family: Calibri;"><big>Click on the "Drill Raster"
+button to generate a table containing the values of the covariate
+rasters at all of the soil sample site locations. The file generated
+here is used as input to the Machine Learning Models used in the DSM.
+The table will be displayed on the right once it is generated.<br>
+</big><br>
+</span>
+<h2><big><small style="color: rgb(0, 102, 0);"><span style="font-family: Arial Black;">5. Run a Model<br>
+</span></small></big></h2>
+
+<span style="font-family: Calibri;"><big>Choose a soil attribute to be
+modelled and select the profile depth for which you wish to model. You
+can manually enter a name to identify the model, otherwise a name will
+automatically be assigned based on the soil attribute name and the
+depth. The model will be generated and information about the model will
+be displayed on the right. This processing can take a long time</big>.<br>
+<br>
+There are some advanced option you can change.<br>
+<br>
+</span>
+<h2><big style="color: rgb(0, 102, 0);"><span style="font-family: Arial Black;">6. Download Data<br>
+</span></big></h2>
+
+<big><span style="font-family: Calibri;">You can download data genereated by DSMTools</span></big><br>
+<br>
+
+
+
+
+</body></html>
