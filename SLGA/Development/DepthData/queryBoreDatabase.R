@@ -12,8 +12,8 @@ library(raster)
 library(stringr)
 library(rgdal)
 
-codeRoot <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM'
-dataRoot <- 'G:/Team Drives/SLGA/Data'
+codeRoot <- 'C:/rdev/AusSoilsDSM/'
+dataRoot <- 'X:/DepthData/'
 
 source(paste0(codeRoot, '/generalFunctions/GeneralUtils.R'))
 source(paste0(codeRoot, '/generalFunctions/VectorUtils.R'))
@@ -23,14 +23,14 @@ rasterOptions(datatype="FLT4S", timer=TRUE, format='GTiff',progress="text",chunk
 
 #  Need to run 32 bit version of R to connect to the MS Access database
 
-file_path <- paste0(dataRoot, "/Development/Regolith/National Bores.accdb")
+file_path <- paste0(dataRoot, "National Bores.accdb")
 
 ### THis is a bit of a hack to get rid of records in the locations table without related records in the lith table
 ### I could work out an easy way to do this in SQL
 ## using RODBC here because BDI kept falling over 
 ## this is not needed after this has been done once
 
-con<-odbcConnectAccess2007(file_path)
+con<-odbcConnectAccess2007(file_path,)
 result <- sqlQuery(con, "SELECT * FROM Bore_Locations2")
 
 pb <- txtProgressBar(min = 0, max = nrow(result), style = 3)
