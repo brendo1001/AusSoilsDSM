@@ -1,7 +1,7 @@
 --- 
 title: "Resources for Digital Soil Mapping"
 author: "Brendan Malone"
-date: "2018-10-05"
+date: "2019-02-19"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 documentclass: book
