@@ -1,0 +1,291 @@
+
+Cubist [Release 2.07 GPL Edition]  Mon Dec 03 15:16:16 2018
+---------------------------------
+
+    Target attribute `outcome'
+
+Read 3976 cases (7 attributes) from undefined.data
+
+Model:
+
+  Rule 1: [43 cases, mean 27.23, range 7.8 to 44.7, est err 4.99]
+
+    if
+	Convergence_060 <= 20.73859
+	Convergence_120 > 32.59237
+    then
+	outcome = 22.17 + 1.171 Convergence_060 - 1.347 Convergence_030
+	          - 0.207 Depth + 0.032 Aspect
+
+  Rule 2: [228 cases, mean 33.97, range 0 to 80.4, est err 8.43]
+
+    if
+	Aspect > 66.26803
+	Convergence_060 > -6.253853
+	Convergence_060 <= -2.093811
+    then
+	outcome = 31.65 + 1.595 Convergence_060 - 1.81 Convergence_030
+	          - 0.718 Convergence_120 - 0.092 Depth
+
+  Rule 3: [694 cases, mean 35.93, range 9.4 to 85.2, est err 9.27]
+
+    if
+	Aspect <= 60.96843
+	Convergence_120 > -5.495876
+    then
+	outcome = 34.71 + 1.388 Convergence_120 - 1.239 Convergence_060
+	          - 0.081 Aspect + 0.433 Convergence_030 - 0.318 Convergence_240
+	          - 0.071 Depth
+
+  Rule 4: [98 cases, mean 41.50, range 16.2 to 81.2, est err 7.42]
+
+    if
+	Aspect > 243.6873
+	Aspect <= 324.1781
+	Convergence_060 > -2.093811
+	Convergence_060 <= 20.73859
+	Convergence_120 > -5.533429
+	Convergence_120 <= 1.322243
+    then
+	outcome = -6.58 - 8.7 Convergence_030 + 7.471 Convergence_060
+	          - 6.18 Convergence_120 + 0.144 Aspect
+
+  Rule 5: [170 cases, mean 41.63, range 19 to 92.4, est err 9.73]
+
+    if
+	Aspect <= 60.96843
+	Convergence_120 > -26.86857
+	Convergence_120 <= -5.931557
+	Convergence_240 > -16.41826
+    then
+	outcome = 50.34 + 0.233 Aspect + 1.005 Convergence_240
+	          + 0.907 Convergence_060 - 0.144 Depth - 0.051 Convergence_030
+	          - 0.036 Convergence_120
+
+  Rule 6: [24 cases, mean 41.75, range 12.6 to 94.2, est err 8.84]
+
+    if
+	Aspect <= 60.96843
+	Convergence_120 > -5.931557
+	Convergence_120 <= -5.495876
+    then
+	outcome = 10.31 + 1.743 Aspect + 0.044 Convergence_060
+	          - 0.033 Convergence_030 - 0.02 Convergence_120
+
+  Rule 7: [63 cases, mean 42.33, range 12.4 to 99.3, est err 7.48]
+
+    if
+	Convergence_240 <= -55.61165
+    then
+	outcome = 400.27 + 6.108 Convergence_240 - 0.635 Convergence_120
+	          + 0.782 Convergence_030
+
+  Rule 8: [344 cases, mean 44.08, range 0 to 94.2, est err 13.72]
+
+    if
+	Convergence_060 > 4.203785
+	Convergence_060 <= 20.73859
+	Convergence_120 > 13.5046
+	Convergence_120 <= 32.59237
+    then
+	outcome = 19.88 + 0.746 Convergence_120 + 0.197 Convergence_240
+	          + 0.028 Aspect - 0.083 Depth
+
+  Rule 9: [325 cases, mean 46.93, range 17.7 to 94.8, est err 12.42]
+
+    if
+	Aspect > 66.26803
+	Convergence_060 > -13.63414
+	Convergence_060 <= -6.253853
+    then
+	outcome = 63.95 + 2.12 Convergence_060 - 0.499 Convergence_120
+	          + 0.145 Convergence_240 - 0.063 Depth
+
+  Rule 10: [108 cases, mean 47.70, range 11.4 to 89.5, est err 10.78]
+
+    if
+	Aspect <= 60.96843
+	Convergence_120 <= -26.86857
+    then
+	outcome = 100.05 - 0.266 Aspect + 0.912 Convergence_120
+	          + 0.317 Convergence_060 - 0.24 Convergence_030
+	          + 0.042 Convergence_240 - 0.016 Depth
+
+  Rule 11: [438 cases, mean 48.80, range 14.6 to 85.4, est err 10.65]
+
+    if
+	Aspect > 66.26803
+	Convergence_120 <= -28.41011
+	Convergence_240 > -55.61165
+    then
+	outcome = 36.97 - 0.225 Convergence_240 + 0.019 Aspect
+	          + 0.026 Convergence_060 - 0.012 Convergence_120
+	          - 0.015 Convergence_030
+
+  Rule 12: [170 cases, mean 49.26, range 4.3 to 88.5, est err 11.47]
+
+    if
+	Aspect > 66.26803
+	Convergence_120 > -28.41011
+	Convergence_120 <= -20.12915
+    then
+	outcome = -42.62 - 3.296 Convergence_120 + 0.083 Aspect - 0.09 Depth
+
+  Rule 13: [158 cases, mean 50.15, range 22.6 to 89, est err 9.94]
+
+    if
+	Aspect <= 268.5816
+	Convergence_060 > 20.73859
+	Convergence_120 <= 31.43876
+    then
+	outcome = 39.78 + 0.566 Convergence_120
+
+  Rule 14: [139 cases, mean 50.20, range 4.7 to 82, est err 10.78]
+
+    if
+	Aspect > 66.26803
+	Aspect <= 268.5816
+	Convergence_060 > 20.73859
+	Convergence_120 > 31.43876
+	Convergence_120 <= 52.20987
+    then
+	outcome = -1.97 + 1.593 Convergence_120 - 1.321 Convergence_030
+	          + 1.029 Convergence_060 - 0.069 Aspect - 0.106 Depth
+
+  Rule 15: [278 cases, mean 50.41, range 13.7 to 100, est err 12.92]
+
+    if
+	Aspect > 66.26803
+	Aspect <= 234.2353
+	Convergence_060 > -2.093811
+	Convergence_060 <= 20.73859
+	Convergence_120 > -5.533429
+	Convergence_120 <= 13.5046
+    then
+	outcome = 51.42 - 2.053 Convergence_060 + 1.087 Convergence_120
+	          + 1.158 Convergence_030 - 0.037 Convergence_240 - 0.015 Depth
+
+  Rule 16: [69 cases, mean 50.61, range 22.7 to 89.1, est err 8.06]
+
+    if
+	Aspect > 324.1781
+	Convergence_060 > -2.093811
+	Convergence_060 <= 20.73859
+	Convergence_120 > -5.533429
+	Convergence_120 <= 13.5046
+    then
+	outcome = -336.81 + 1.144 Aspect - 0.88 Convergence_120
+	          + 0.979 Convergence_060 - 0.11 Depth
+
+  Rule 17: [40 cases, mean 51.76, range 35 to 79.5, est err 8.80]
+
+    if
+	Aspect <= 60.96843
+	Convergence_120 > -26.86857
+	Convergence_120 <= -5.931557
+	Convergence_240 <= -16.41826
+    then
+	outcome = 63.08 - 1.083 Convergence_120 - 0.174 Aspect
+	          + 0.591 Convergence_240 + 0.385 Convergence_060
+	          - 0.232 Convergence_030 - 0.092 Depth
+
+  Rule 18: [109 cases, mean 53.72, range 14.5 to 86.3, est err 9.99]
+
+    if
+	Aspect <= 268.5816
+	Convergence_120 > 52.20987
+    then
+	outcome = -63.29 + 2.921 Convergence_060 - 1.778 Convergence_030
+	          + 0.572 Convergence_120 - 0.002 Aspect
+
+  Rule 19: [100 cases, mean 54.42, range 22.5 to 92.4, est err 9.67]
+
+    if
+	Aspect > 66.26803
+	Convergence_060 > -2.093811
+	Convergence_120 <= -5.533429
+    then
+	outcome = 88.17 + 3.655 Convergence_120 - 2.233 Convergence_060
+	          + 0.068 Aspect - 0.098 Depth
+
+  Rule 20: [178 cases, mean 55.13, range 26.2 to 90, est err 10.81]
+
+    if
+	Aspect > 243.6873
+	Aspect <= 324.1781
+	Convergence_060 > -2.093811
+	Convergence_060 <= 20.73859
+	Convergence_120 > 1.322243
+	Convergence_120 <= 13.5046
+    then
+	outcome = -18.72 - 3.182 Convergence_060 + 3.073 Convergence_030
+	          + 0.292 Aspect - 0.154 Depth + 0.035 Convergence_120
+
+  Rule 21: [154 cases, mean 57.73, range 27 to 100, est err 12.93]
+
+    if
+	Aspect > 66.26803
+	Convergence_060 <= -13.63414
+	Convergence_120 > -20.12915
+    then
+	outcome = 57.93 - 0.804 Convergence_120 + 0.242 Convergence_060
+	          - 0.083 Depth + 0.002 Aspect
+
+  Rule 22: [45 cases, mean 61.72, range 20.8 to 100, est err 7.38]
+
+    if
+	Convergence_060 > -2.093811
+	Convergence_060 <= 4.203785
+	Convergence_120 > 13.5046
+    then
+	outcome = -50.72 + 12.432 Convergence_060 + 2.867 Convergence_120
+	          + 0.219 Aspect
+
+  Rule 23: [129 cases, mean 62.29, range 22.8 to 91.4, est err 10.31]
+
+    if
+	Aspect > 268.5816
+	Convergence_060 > 20.73859
+    then
+	outcome = 72.95 - 0.552 Convergence_030 + 0.339 Convergence_060
+	          - 0.098 Depth - 0.01 Convergence_120
+
+  Rule 24: [26 cases, mean 70.71, range 41 to 96.6, est err 7.63]
+
+    if
+	Aspect > 234.2353
+	Aspect <= 243.6873
+	Convergence_120 > -5.533429
+	Convergence_120 <= 13.5046
+    then
+	outcome = 3095.51 - 12.498 Aspect - 6.734 Convergence_060
+	          + 3.299 Convergence_120 - 0.098 Depth
+
+  Rule 25: [40 cases, mean 74.97, range 57.3 to 100, est err 7.94]
+
+    if
+	Aspect > 60.96843
+	Aspect <= 66.26803
+    then
+	outcome = -66.09 + 2.065 Aspect + 0.341 Depth
+
+
+Evaluation on training data (3976 cases):
+
+    Average  |error|               7.28
+    Relative |error|               0.49
+    Correlation coefficient        0.82
+
+
+	Attribute usage:
+	  Conds  Model
+
+	   88%    72%    Aspect
+	   81%    98%    Convergence_120
+	   55%    81%    Convergence_060
+	   17%    59%    Convergence_240
+	          78%    Depth
+	          66%    Convergence_030
+
+
+Time: 0.1 secs

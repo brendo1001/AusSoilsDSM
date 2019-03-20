@@ -1,0 +1,299 @@
+
+Cubist [Release 2.07 GPL Edition]  Tue Mar 12 05:29:07 2019
+---------------------------------
+
+    Target attribute `outcome'
+
+Read 1203 cases (13 attributes) from undefined.data
+
+Model:
+
+  Rule 1: [177 cases, mean 6.030, range 4.5 to 7.9, est err 0.458]
+
+    if
+	AACN > 19.33682
+	Mid_Slope_Positon <= 0.8150602
+	NDVI <= -0.2064969
+	TWI > 10.41688
+    then
+	outcome = 4.752 + 0.104 Hillshading - 0.069 Slope + 0.27 MRVBF
+	          + 0.082 TWI - 0.33 Depth + 0.7 NDVI + 0.0002 Light_insolation
+
+  Rule 2: [161 cases, mean 6.058, range 4.27 to 8.8, est err 0.472]
+
+    if
+	AACN > 19.33682
+	Hillshading <= 4.544392
+	Mid_Slope_Positon <= 0.8150602
+	NDVI <= -0.1556778
+	TWI > 10.41688
+    then
+	outcome = 8.046 + 0.0414 AACN + 5.9 NDVI
+	          - 0.108 Terrain_Ruggedness_Index - 0.034 Landsat_Band1
+	          + 0.18 MRVBF + 0.034 Hillshading - 0.036 Slope
+	          - 0.0026 Elevation + 0.028 TWI
+
+  Rule 3: [37 cases, mean 6.149, range 4.94 to 7, est err 0.350]
+
+    if
+	Hillshading > 12.13797
+	MRVBF > 0.005651707
+	TWI <= 10.41688
+    then
+	outcome = -5.526 + 0.621 TWI + 0.0407 Elevation - 0.2 Hillshading
+	          - 8.5 NDVI + 0.0039 AACN - 0.07 MRVBF - 0.013 Slope
+	          + 0.007 Terrain_Ruggedness_Index
+
+  Rule 4: [94 cases, mean 6.271, range 5 to 8.75, est err 0.477]
+
+    if
+	Hillshading <= 12.13797
+	Mid_Slope_Positon <= 0.8150602
+	NDVI <= -0.1556778
+	Slope > 2.725296
+	TWI > 9.63401
+	TWI <= 10.25555
+    then
+	outcome = -12 + 1.845 TWI + 0.253 Hillshading - 0.175 Slope
+	          + 0.0173 AACN + 5.2 NDVI + 0.022 Terrain_Ruggedness_Index
+
+  Rule 5: [40 cases, mean 6.358, range 5.23 to 7.61, est err 0.387]
+
+    if
+	AACN <= 19.33682
+	Hillshading > 3.674034
+	Mid_Slope_Positon <= 0.8150602
+	NDVI <= -0.1556778
+    then
+	outcome = 20.708 + 0.1051 AACN - 0.0098 Light_insolation
+	          + 1.04 Mid_Slope_Positon + 0.024 Hillshading - 0.026 Slope
+	          + 0.03 TWI + 0.7 NDVI - 0.0016 Elevation
+	          + 0.017 Terrain_Ruggedness_Index - 0.004 Landsat_Band1
+
+  Rule 6: [32 cases, mean 6.463, range 5.31 to 7.77, est err 0.478]
+
+    if
+	Elevation <= 126.5898
+	Hillshading > 4.869425
+	NDVI > -0.1556778
+    then
+	outcome = 12.771 - 0.436 Hillshading - 0.078 Landsat_Band1
+	          - 0.0031 Elevation - 1.3 NDVI - 0.035 TWI + 0.09 MRVBF
+	          + 0.018 Slope + 0.0005 Light_insolation
+
+  Rule 7: [69 cases, mean 6.654, range 4.92 to 8.3, est err 0.570]
+
+    if
+	Depth <= 0.41
+	Landsat_Band1 > 47.66608
+	Mid_Slope_Positon > 0.8150602
+	MRVBF <= 2.537746
+	NDVI <= -0.1556778
+    then
+	outcome = -4.966 + 12.13 Mid_Slope_Positon + 0.168 Hillshading
+	          + 1.78 Depth - 0.0133 AACN - 0.088 Slope + 0.0103 Elevation
+	          - 0.087 Terrain_Ruggedness_Index
+
+  Rule 8: [154 cases, mean 6.668, range 5.09 to 8.9, est err 0.565]
+
+    if
+	Hillshading <= 12.13797
+	Mid_Slope_Positon <= 0.8150602
+	MRVBF > 0.005651707
+	NDVI <= -0.1556778
+	TWI <= 9.63401
+    then
+	outcome = -5.648 + 1.559 TWI + 0.152 Hillshading + 7.3 NDVI
+	          - 0.036 Landsat_Band1 + 0.85 Mid_Slope_Positon + 0.0031 AACN
+	          - 0.09 MRVBF - 0.0023 Elevation - 0.008 Slope
+
+  Rule 9: [21 cases, mean 6.725, range 4.58 to 8.57, est err 0.476]
+
+    if
+	Depth > 0.41
+	Landsat_Band1 > 47.66608
+	Mid_Slope_Positon > 0.8150602
+	Mid_Slope_Positon <= 0.8381509
+    then
+	outcome = -62.887 + 83.65 Mid_Slope_Positon + 0.019 Hillshading
+	          + 0.0033 AACN + 0.031 TWI - 0.014 Slope
+
+  Rule 10: [44 cases, mean 6.734, range 4.88 to 9.11, est err 0.498]
+
+    if
+	Landsat_Band1 <= 47.66608
+	Mid_Slope_Positon > 0.8150602
+	NDVI <= -0.1556778
+    then
+	outcome = -16.503 + 0.385 Landsat_Band1 + 0.06 AACN + 1.07 MRVBF
+	          - 12.2 NDVI - 0.163 Hillshading - 0.049 Slope + 0.028 TWI
+
+  Rule 11: [26 cases, mean 6.798, range 5.3 to 8.3, est err 0.588]
+
+    if
+	AACN <= 19.33682
+	Hillshading <= 3.674034
+	NDVI <= -0.2736946
+    then
+	outcome = 0.986 + 3.83 Mid_Slope_Positon - 7.5 NDVI + 0.0092 AACN
+	          + 0.051 Hillshading - 0.0022 Elevation
+	          + 0.0005 Light_insolation + 0.01 TWI
+
+  Rule 12: [12 cases, mean 6.803, range 5.91 to 8.4, est err 0.332]
+
+    if
+	MRVBF <= 0.005651707
+	TWI <= 8.751507
+    then
+	outcome = -4.659 - 808.64 MRVBF - 55.7 NDVI
+
+  Rule 13: [21 cases, mean 6.817, range 4.9 to 8.81, est err 0.592]
+
+    if
+	Mid_Slope_Positon > 0.8150602
+	MRVBF > 2.537746
+    then
+	outcome = 5.186 + 1.99 MRVBF - 0.089 Landsat_Band1 + 0.0018 AACN
+	          + 0.009 Hillshading + 0.015 TWI - 0.009 Slope
+
+  Rule 14: [16 cases, mean 6.912, range 5.8 to 8.23, est err 0.330]
+
+    if
+	AACN <= 19.33682
+	Hillshading <= 1.784477
+	Mid_Slope_Positon <= 0.8150602
+	NDVI > -0.2736946
+    then
+	outcome = 11.278 - 0.648 Hillshading - 4.57 Mid_Slope_Positon
+	          + 0.0094 AACN - 0.0028 Elevation - 0.6 NDVI
+
+  Rule 15: [80 cases, mean 6.940, range 5.36 to 8.55, est err 0.465]
+
+    if
+	Hillshading > 4.544392
+	MRVBF > 0.005651707
+	NDVI > -0.2064969
+	NDVI <= -0.1556778
+	TWI > 10.41688
+    then
+	outcome = 4.887 + 0.215 TWI + 0.092 Hillshading - 0.09 Slope
+	          + 0.35 MRVBF + 0.0095 AACN + 3.1 NDVI - 0.0034 Elevation
+	          + 0.037 Terrain_Ruggedness_Index - 0.014 Landsat_Band1
+	          + 0.0003 Light_insolation
+
+  Rule 16: [40 cases, mean 7.111, range 5.48 to 9.84, est err 0.567]
+
+    if
+	AACN <= 19.33682
+	Hillshading > 1.784477
+	Hillshading <= 3.674034
+	Mid_Slope_Positon <= 0.8150602
+	NDVI > -0.2736946
+	NDVI <= -0.1556778
+    then
+	outcome = 19.377 + 1.081 Hillshading + 0.0835 AACN
+	          + 4.95 Mid_Slope_Positon - 0.0128 Light_insolation + 0.302 TWI
+	          - 0.82 MRVBF - 0.004 Elevation - 0.9 NDVI
+
+  Rule 17: [41 cases, mean 7.139, range 4.9 to 9.9, est err 0.694]
+
+    if
+	Mid_Slope_Positon <= 0.8150602
+	MRVBF > 0.005651707
+	TWI > 10.25555
+	TWI <= 10.41688
+    then
+	outcome = -215.259 + 21.724 TWI + 6.34 MRVBF - 3.6 Mid_Slope_Positon
+	          + 12.8 NDVI + 0.0005 AACN - 0.0004 Elevation
+
+  Rule 18: [50 cases, mean 7.268, range 5.07 to 9.52, est err 1.011]
+
+    if
+	Depth > 0.41
+	Landsat_Band1 > 47.66608
+	Mid_Slope_Positon > 0.8381509
+	MRVBF <= 2.537746
+	NDVI <= -0.1556778
+    then
+	outcome = -7.87 + 14.48 Mid_Slope_Positon + 0.175 Hillshading
+	          + 1.65 Depth - 0.09 Slope + 0.0099 Elevation
+	          - 0.083 Terrain_Ruggedness_Index - 0.0083 AACN + 0.005 TWI
+
+  Rule 19: [53 cases, mean 7.269, range 5.55 to 9.05, est err 0.535]
+
+    if
+	Elevation > 126.5898
+	Hillshading > 4.869425
+	NDVI > -0.1556778
+    then
+	outcome = 14.487 - 0.0634 Elevation + 0.0457 AACN - 0.014 Hillshading
+	          - 0.021 TWI - 0.7 NDVI + 0.05 MRVBF + 0.011 Slope
+	          + 0.0003 Light_insolation - 0.003 Landsat_Band1
+
+  Rule 20: [79 cases, mean 7.437, range 6 to 9.2, est err 0.516]
+
+    if
+	MRVBF <= 0.005651707
+	TWI > 8.751507
+    then
+	outcome = -5.96 + 133.42 MRVBF + 0.911 TWI - 7.5 NDVI + 0.0172 AACN
+	          + 0.69 Depth - 0.029 Slope + 0.0011 Light_insolation
+	          + 0.012 Hillshading - 0.0014 Elevation
+	          + 0.008 Terrain_Ruggedness_Index - 0.002 Landsat_Band1
+
+  Rule 21: [14 cases, mean 7.615, range 5.88 to 9.04, est err 0.358]
+
+    if
+	Hillshading <= 4.869425
+	NDVI > -0.1556778
+	Terrain_Ruggedness_Index <= 2.962786
+    then
+	outcome = 25.659 - 5.414 Hillshading + 0.28 MRVBF - 0.69 Depth
+	          + 0.078 Terrain_Ruggedness_Index - 0.007 Elevation
+	          + 0.0022 Light_insolation - 0.068 TWI
+
+  Rule 22: [12 cases, mean 7.838, range 6.03 to 9.36, est err 1.017]
+
+    if
+	Mid_Slope_Positon <= 0.8150602
+	Slope <= 2.725296
+	TWI <= 10.41688
+    then
+	outcome = 8.23
+
+  Rule 23: [50 cases, mean 8.231, range 6 to 9.65, est err 0.522]
+
+    if
+	Hillshading <= 4.869425
+	NDVI > -0.1556778
+	Terrain_Ruggedness_Index > 2.962786
+    then
+	outcome = 31.783 + 0.577 Hillshading - 0.0117 Light_insolation
+	          - 0.0318 Elevation + 0.35 Terrain_Ruggedness_Index - 0.231 TWI
+
+
+Evaluation on training data (1203 cases):
+
+    Average  |error|              0.448
+    Relative |error|               0.54
+    Correlation coefficient        0.81
+
+
+	Attribute usage:
+	  Conds  Model
+
+	   83%    82%    NDVI
+	   71%    35%    Mid_Slope_Positon
+	   64%    92%    TWI
+	   60%    95%    Hillshading
+	   41%    71%    MRVBF
+	   35%    78%    AACN
+	   14%    50%    Landsat_Band1
+	   11%    29%    Depth
+	    8%    84%    Slope
+	    6%    71%    Elevation
+	    5%    51%    Terrain_Ruggedness_Index
+	          45%    Light_insolation
+
+
+Time: 0.0 secs

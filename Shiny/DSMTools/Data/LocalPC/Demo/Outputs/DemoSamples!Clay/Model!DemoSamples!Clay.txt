@@ -1,0 +1,119 @@
+
+Cubist [Release 2.07 GPL Edition]  Wed Dec 12 11:28:53 2018
+---------------------------------
+
+    Target attribute `outcome'
+
+Read 1181 cases (13 attributes) from undefined.data
+
+Model:
+
+  Rule 1: [52 cases, mean 30.7, range 10 to 57, est err 9.6]
+
+    if
+	Depth <= 0.59
+	Hillshading > 1.772679
+	Terrain_Ruggedness_Index <= 2.710077
+    then
+	outcome = 23.2 + 53.2 Depth + 16 NDVI
+
+  Rule 2: [30 cases, mean 32.0, range 10 to 57, est err 10.4]
+
+    if
+	Depth > 0.59
+	AACN > 34.96471
+	Elevation <= 142.134
+    then
+	outcome = 16.8 - 75 NDVI
+
+  Rule 3: [43 cases, mean 38.6, range 10 to 57, est err 9.0]
+
+    if
+	Depth <= 0.59
+	Hillshading <= 1.772679
+	Terrain_Ruggedness_Index <= 2.710077
+    then
+	outcome = 36.3 + 11.93 Hillshading - 7.89 Terrain_Ruggedness_Index
+	          + 10.8 Depth + 9 NDVI + 0.012 Elevation - 0.007 AACN
+	          + 0.05 TWI
+
+  Rule 4: [189 cases, mean 38.7, range 8 to 57, est err 8.1]
+
+    if
+	Depth <= 0.59
+	MRVBF > 0.3063033
+	Terrain_Ruggedness_Index > 2.710077
+	TWI <= 15.47468
+    then
+	outcome = 15.3 + 28.8 Depth + 0.183 Elevation + 1.48 TWI
+	          + 0.47 Hillshading - 0.078 AACN + 26 NDVI - 0.26 Landsat_Band1
+	          - 0.42 Slope - 4.3 Mid_Slope_Positon
+	          - 0.26 Terrain_Ruggedness_Index - 0.5 MRVBF
+
+  Rule 5: [479 cases, mean 40.6, range 8 to 57, est err 8.4]
+
+    if
+	Depth <= 0.59
+	MRVBF <= 0.3063033
+	Terrain_Ruggedness_Index > 2.710077
+    then
+	outcome = 9 + 15.5 MRVBF + 27.2 Depth + 2.24 TWI + 0.166 Elevation
+	          + 0.53 Hillshading + 31 NDVI - 0.71 Terrain_Ruggedness_Index
+	          - 0.28 Landsat_Band1 - 0.019 AACN - 1.1 Mid_Slope_Positon
+	          - 0.05 Slope
+
+  Rule 6: [34 cases, mean 41.4, range 21 to 57, est err 6.8]
+
+    if
+	Depth <= 0.59
+	Terrain_Ruggedness_Index > 2.710077
+	TWI > 15.47468
+    then
+	outcome = -198.2 + 10.53 TWI + 4.24 Hillshading + 54.2 Mid_Slope_Positon
+	          + 24.9 Depth + 0.014 Elevation - 0.007 AACN - 0.04 Slope
+	          + 2 NDVI - 0.02 Landsat_Band1
+
+  Rule 7: [194 cases, mean 41.9, range 10 to 57, est err 8.6]
+
+    if
+	Depth > 0.59
+	Elevation > 142.134
+    then
+	outcome = 58.1 + 0.172 Elevation - 0.191 AACN - 9.8 Mid_Slope_Positon
+	          - 0.018 Light_insolation + 0.43 TWI + 1.2 Depth + 2 NDVI
+
+  Rule 8: [167 cases, mean 47.9, range 10 to 57, est err 5.9]
+
+    if
+	Depth > 0.59
+	AACN <= 34.96471
+    then
+	outcome = 50.3 + 0.14 TWI - 0.012 AACN - 1.1 Mid_Slope_Positon
+	          + 0.008 Elevation - 0.002 Light_insolation
+
+
+Evaluation on training data (1181 cases):
+
+    Average  |error|                8.3
+    Relative |error|               0.83
+    Correlation coefficient        0.56
+
+
+	Attribute usage:
+	  Conds  Model
+
+	  100%    83%    Depth
+	   67%    60%    Terrain_Ruggedness_Index
+	   56%    56%    MRVBF
+	   19%    93%    Elevation
+	   19%    93%    TWI
+	   17%    93%    AACN
+	    8%    63%    Hillshading
+	          89%    Mid_Slope_Positon
+	          86%    NDVI
+	          59%    Landsat_Band1
+	          59%    Slope
+	          30%    Light_insolation
+
+
+Time: 0.1 secs

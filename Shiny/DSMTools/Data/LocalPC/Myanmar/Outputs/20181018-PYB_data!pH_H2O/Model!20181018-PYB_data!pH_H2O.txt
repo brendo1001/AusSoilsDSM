@@ -1,0 +1,581 @@
+
+Cubist [Release 2.07 GPL Edition]  Sat Dec 01 08:44:25 2018
+---------------------------------
+
+    Target attribute `outcome'
+
+Read 3980 cases (51 attributes) from undefined.data
+
+Model:
+
+  Rule 1: [244 cases, mean 6.353, range 4.4 to 8.58, est err 0.478]
+
+    if
+	MRVBF_32 <= 2
+	PhysiographicRegions_Mask > 3
+    then
+	outcome = 4.304 + 0.92 MRVBF_32 - 0.364 TPI_00150_30
+	          + 0.335 TPI_00120_30 - 0.0265 Convergence_240
+	          - 0.018 Terrain_ValleyDepth - 0.0227 Convergence_480
+	          + 0.0199 Convergence_030 + 0.0187 TPI_00900_30
+	          + 0.066 TPI_00180_30 + 0.0186 TPI_00600_30
+	          + 0.003 DEM_SRTM_Mask_filled_SAGA + 0.0076 Convergence_120
+	          - 0.0117 Terrain_SlopeHeight - 0.0064 TPI_03840_30
+	          + 0.038 TPI_00210_30 + 0.043 TWI_SAGA_10 + 0.0038 TPI_07680_30
+	          - 0.007 TPI_01200_30 + 0.095 PhysiographicRegions_Mask
+	          + 0.072 TRI - 50 Curvature_CrossSectional
+	          + 0.0011 TPI_09000_30 - 0.0008 TPI_06000_30
+	          + 0.0006 Terrain_StandardisedHeight - 0.0024 TPI_00480_30
+	          - 1.9e-005 SlopeLength - 0.0012 TPI_01500_30
+	          - 0.0014 Convergence_960 - 0.003 TPI_00300_30 + 0.0008 Depth
+
+  Rule 2: [41 cases, mean 6.376, range 4.84 to 8.17, est err 0.401]
+
+    if
+	PhysiographicRegions_Mask <= 2
+	TPI_00240_30 > 5.566499
+    then
+	outcome = 4.439 + 0.2141 Terrain_SlopeHeight
+	          - 5.29 Terrain_MidSlopePosition
+	          + 0.907 PhysiographicRegions_Mask + 0.137 TPI_00120_30
+
+  Rule 3: [67 cases, mean 6.405, range 4.12 to 8.04, est err 0.499]
+
+    if
+	PhysiographicRegions_Mask > 2
+	PhysiographicRegions_Mask <= 3
+	Terrain_StandardisedHeight > 187.9406
+	TPI_06000_30 > -0.6474288
+	TWI_SAGA_10 > 15.92818
+    then
+	outcome = -3.878 - 0.3729 TPI_06000_30 - 0.4617 Terrain_SlopeHeight
+	          + 0.6411 TPI_00480_30 + 0.1308 TPI_09000_30
+	          + 0.1145 Terrain_StandardisedHeight - 0.517 TWI_SAGA_10
+	          - 0.000549 SlopeLength - 0.06 TPI_00600_30
+	          - 0.185 TPI_00120_30 + 0.143 TRI + 0.0059 TPI_03840_30
+	          + 0.082 TPI_00090_30 - 0.031 MRVBF_08 + 0.0006 Depth
+
+  Rule 4: [30 cases, mean 6.656, range 6.02 to 7.12, est err 0.228]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	TPI_00090_30 > -1.358136
+	TPI_00600_30 <= -1.456803
+	TPI_01200_30 > 2.495653
+    then
+	outcome = 7.999 + 2.173 TPI_00180_30 - 2.446 TPI_00150_30
+	          - 0.737 TPI_00210_30 + 0.805 TPI_00120_30
+	          - 0.1052 TPI_00600_30 - 0.037 TPI_01200_30
+	          - 0.0262 Terrain_ValleyDepth + 0.037 TPI_00960_30 - 0.328 TRI
+	          + 0.05 TPI_00300_30 + 0.0202 TPI_00900_30 + 0.046 Slope
+	          + 0.0116 TPI_03000_30 + 0.0106 Convergence_120
+	          - 1.38 Terrain_NormalisedHeight - 0.0074 TPI_03840_30
+	          + 0.157 PhysiographicRegions_Mask
+	          - 0.0027 DEM_SRTM_Mask_filled_SAGA + 0.000125 SlopeLength
+	          + 0.0039 TPI_07680_30 + 0.0152 TPI_00480_30
+	          + 0.027 TPI_00240_30 - 0.0034 TPI_06000_30
+	          + 0.0028 Terrain_StandardisedHeight + 0.0055 Convergence_480
+	          + 0.0032 TPI_01920_30 + 0.11 TPI_00060_30 - 0.043 MRVBF_32
+	          + 0.0028 TPI_01500_30 - 0.22 Terrain_MidSlopePosition
+	          - 0.0019 Convergence_060 - 0.0015 Convergence_240
+	          - 0.002 Convergence_960 + 0.0012 Depth - 0.00027 Aspect
+	          + 0.014 MRVBF_08 - 0.007 TWI_SAGA_05 - 0.012 TPI_00090_30
+	          + 0.0007 Convergence_030 + 0.005 MRVBF_16
+
+  Rule 5: [109 cases, mean 6.833, range 5.19 to 8.9, est err 0.238]
+
+    if
+	MRVBF_32 > 2
+	PhysiographicRegions_Mask > 3
+	TPI_03000_30 <= -13.47533
+	TWI_SAGA_10 > 16.81291
+    then
+	outcome = -2.687 + 3.846 TRI + 0.1671 TPI_00480_30 + 0.456 TWI_SAGA_10
+	          + 0.0309 TPI_03000_30 - 0.0192 Terrain_SlopeHeight
+	          + 0.0068 Terrain_StandardisedHeight + 0.000219 SlopeLength
+	          + 0.0065 TPI_09000_30 + 0.128 PhysiographicRegions_Mask
+	          + 0.019 TPI_00300_30 + 0.0049 Depth + 0.07 MRVBF_32
+	          - 0.0057 TPI_01200_30 + 0.0045 TPI_00600_30
+	          + 0.0007 DEM_SRTM_Mask_filled_SAGA - 0.001 TPI_07680_30
+	          - 0.017 TPI_00120_30 + 0.001 Terrain_ValleyDepth
+	          - 0.0015 Convergence_960 - 0.0005 TPI_06000_30
+	          + 0.08 Terrain_MidSlopePosition + 0.0007 TPI_01500_30
+	          + 0.0006 Convergence_480
+
+  Rule 6: [34 cases, mean 7.009, range 5.21 to 8.44, est err 0.575]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA > 355.7721
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	PhysiographicRegions_Mask <= 2
+	TPI_00600_30 <= -1.456803
+    then
+	outcome = -40.223 + 0.1196 DEM_SRTM_Mask_filled_SAGA
+	          + 1.361 TPI_00180_30 - 1.487 TPI_00150_30 - 0.505 TPI_00210_30
+	          + 1.701 PhysiographicRegions_Mask + 0.598 MRVBF_08
+	          + 0.519 TPI_00120_30 - 0.0562 TPI_00600_30
+	          - 0.0208 Terrain_ValleyDepth - 0.0221 TPI_01200_30
+	          + 0.0235 TPI_00960_30 - 1.93 Terrain_NormalisedHeight
+	          + 0.0064 Terrain_StandardisedHeight + 0.045 TPI_00240_30
+	          + 0.007 TPI_03000_30 + 0.024 TPI_00300_30
+	          - 0.0048 TPI_03840_30 + 0.0069 TPI_01500_30 - 0.097 TRI
+	          + 0.0029 TPI_07680_30 + 0.078 TPI_00090_30
+	          + 0.0041 Convergence_120 + 0.0039 Convergence_480
+	          - 0.0017 TPI_09000_30 - 0.29 Terrain_MidSlopePosition
+	          - 0.1 TPI_00060_30 + 4.5e-005 SlopeLength - 0.03 MRVBF_32
+
+  Rule 7: [129 cases, mean 7.256, range 4.68 to 9.2, est err 0.471]
+
+    if
+	PhysiographicRegions_Mask > 2
+	PhysiographicRegions_Mask <= 3
+	Terrain_StandardisedHeight > 187.9406
+	TPI_06000_30 <= -0.6474288
+    then
+	outcome = 46.273 + 0.7489 TPI_03840_30 - 0.5207 TPI_06000_30
+	          - 0.01148 SlopeLength - 0.3576 Terrain_ValleyDepth
+	          - 5.655 TPI_00090_30 - 0.1544 Terrain_StandardisedHeight
+	          + 0.3399 Terrain_SlopeHeight - 3.54 TRI + 1.568 TPI_00120_30
+	          + 13.35 Terrain_MidSlopePosition - 0.499 TWI_SAGA_10
+	          + 0.1417 TPI_00600_30 - 0.0558 Convergence_480
+	          - 0.491 MRVBF_08 + 0.0124 Depth + 0.2 TPI_00060_30
+	          - 0.0019 TPI_00900_30 - 0.007 TPI_00180_30
+	          - 0.001 TPI_01500_30 + 0.0008 TPI_01920_30
+
+  Rule 8: [155 cases, mean 7.294, range 5.27 to 9.92, est err 0.445]
+
+    if
+	MRVBF_32 > 2
+	PhysiographicRegions_Mask > 3
+	TWI_SAGA_10 <= 16.81291
+    then
+	outcome = 2.954 - 0.2033 TPI_00480_30 + 0.28 TPI_00300_30
+	          + 0.0662 TPI_00600_30 + 0.422 MRVBF_32 - 0.248 TPI_00120_30
+	          + 0.345 TRI - 0.0227 Convergence_960
+	          + 0.007 Terrain_StandardisedHeight
+	          + 0.0048 DEM_SRTM_Mask_filled_SAGA
+	          - 0.247 PhysiographicRegions_Mask + 0.000223 SlopeLength
+	          + 0.0065 TPI_09000_30 + 0.0103 Depth + 0.0106 TPI_01500_30
+	          + 0.055 TWI_SAGA_10 + 0.0095 Convergence_480
+	          - 0.0067 Convergence_240 + 0.0036 TPI_06000_30
+	          - 0.0031 TPI_07680_30 - 0.0045 Terrain_SlopeHeight
+	          + 0.0027 Terrain_ValleyDepth - 0.0031 TPI_01200_30
+
+  Rule 9: [52 cases, mean 7.399, range 5.38 to 9.29, est err 0.405]
+
+    if
+	PhysiographicRegions_Mask <= 2
+	Terrain_MidSlopePosition > 0.06264538
+	TPI_00600_30 > -1.456803
+	TPI_01920_30 <= -5.670844
+    then
+	outcome = -802.891 - 73.3186 Terrain_SlopeHeight
+	          + 18.1564 Terrain_ValleyDepth
+	          + 315.311 PhysiographicRegions_Mask - 107.806 MRVBF_08
+	          + 10.5218 Convergence_480 + 2.4924 DEM_SRTM_Mask_filled_SAGA
+	          + 91.107 TPI_00090_30 - 345.41 Terrain_MidSlopePosition
+	          - 51.782 MRRTF_08 + 0.0063 TPI_03000_30 - 0.113 TRI
+	          + 0.024 Slope - 0.0051 TPI_03840_30 + 0.027 TPI_00210_30
+	          - 0.023 TPI_00180_30 - 0.34 Terrain_NormalisedHeight
+	          + 0.009 TPI_00300_30 - 0.0025 TPI_01920_30
+	          - 0.015 TPI_00150_30 - 0.008 TPI_00240_30 + 0.07 TPI_00060_30
+	          - 0.016 TPI_00120_30 + 0.0013 Convergence_120
+	          + 0.0024 TPI_00600_30 - 0.0011 Convergence_240
+	          - 0.007 TWI_SAGA_05 + 0.0016 TPI_00900_30
+	          + 0.0006 TPI_07680_30 + 1.7e-005 SlopeLength
+	          - 0.0009 Convergence_060 + 0.0005 Depth
+	          + 0.0006 Convergence_030 - 0.003 TWI_SAGA_10
+	          - 0.0006 Convergence_960
+
+  Rule 10: [28 cases, mean 7.456, range 5.99 to 9.28, est err 0.402]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	PhysiographicRegions_Mask <= 2
+	TPI_00090_30 <= -1.358136
+    then
+	outcome = -76.245 + 0.3101 DEM_SRTM_Mask_filled_SAGA - 7.231 MRVBF_08
+	          + 0.0061 Depth
+
+  Rule 11: [54 cases, mean 7.472, range 5.51 to 9.54, est err 0.334]
+
+    if
+	Convergence_480 > 30.84328
+	PhysiographicRegions_Mask <= 2
+	TPI_00240_30 <= 5.566499
+	TPI_06000_30 <= 16.6516
+    then
+	outcome = -14.915 + 7.9453 Terrain_SlopeHeight
+	          - 2.5953 Terrain_ValleyDepth + 5.1256 TPI_00600_30
+	          - 9.515 TPI_00240_30 - 1.1604 TPI_06000_30
+	          - 1.4158 Convergence_480 + 17.677 TRI - 6.759 TPI_00090_30
+	          + 4.054 TPI_00120_30 - 3.221 MRVBF_08
+	          - 0.0344 DEM_SRTM_Mask_filled_SAGA + 0.09 TPI_00210_30
+	          + 0.062 Slope - 0.055 TPI_00180_30 + 0.024 TPI_00300_30
+	          + 0.0065 Depth + 0.0041 TPI_03000_30 + 0.17 TPI_00060_30
+	          - 0.023 TWI_SAGA_05 + 5.8e-005 SlopeLength
+	          + 0.0028 Convergence_120 - 0.002 TPI_03840_30
+	          - 0.0023 Convergence_060 + 0.0013 TPI_07680_30
+	          + 0.003 TPI_00900_30 - 0.0018 TPI_01920_30
+	          - 0.0016 Convergence_240 + 0.0015 Convergence_030
+	          + 0.007 TWI_SAGA_10 + 0.0005 TPI_09000_30
+	          - 0.09 Terrain_NormalisedHeight - 0.004 TPI_00150_30
+
+  Rule 12: [29 cases, mean 7.547, range 5.86 to 8.48, est err 0.159]
+
+    if
+	Convergence_480 > 30.84328
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	PhysiographicRegions_Mask <= 2
+	TPI_06000_30 > 16.6516
+    then
+	outcome = 31.032 - 0.007283 SlopeLength
+	          - 0.0892 DEM_SRTM_Mask_filled_SAGA
+	          + 0.3302 Terrain_SlopeHeight - 0.0787 Convergence_480
+	          + 0.873 MRVBF_32 - 0.0016 TPI_06000_30 + 0.0035 TPI_00600_30
+	          + 0.006 TPI_00240_30 - 0.004 TWI_SAGA_10 + 0.007 MRVBF_08
+
+  Rule 13: [542 cases, mean 7.774, range 4.98 to 10.09, est err 0.549]
+
+    if
+	MRVBF_08 <= 4
+	PhysiographicRegions_Mask > 2
+	PhysiographicRegions_Mask <= 3
+	Terrain_StandardisedHeight <= 187.9406
+	TWI_SAGA_10 > 15.92818
+    then
+	outcome = -9.137 + 2.27 TPI_00210_30 + 0.5613 TPI_00960_30
+	          - 0.7429 TPI_00480_30 - 0.4211 TPI_00900_30
+	          - 1.556 TPI_00180_30 - 0.2398 TPI_01500_30
+	          + 0.2927 TPI_00600_30 + 0.1236 TPI_01920_30
+	          + 0.0575 Terrain_StandardisedHeight + 1.173 TRI
+	          - 0.568 TPI_00120_30 - 0.0368 Convergence_240
+	          + 0.0526 Terrain_SlopeHeight + 0.48 MRVBF_32
+	          + 0.0299 Convergence_480 + 0.025 Convergence_030
+	          + 0.247 MRVBF_08 - 0.346 TPI_00090_30 + 0.112 TWI_SAGA_10
+	          + 1.36 Terrain_MidSlopePosition + 0.0131 Depth
+	          - 0.088 TPI_00150_30 + 0.41 TPI_00060_30 + 0.007 Slope
+	          + 0.0007 TPI_07680_30 - 0.0007 TPI_06000_30
+	          - 0.004 TPI_00300_30 - 0.006 TWI_SAGA_05 - 7 Curvature_General
+	          - 0.014 PhysiographicRegions_Mask - 0.0003 TPI_09000_30
+	          + 0.0004 TPI_03840_30 + 0.002 TPI_00240_30
+	          - 0.0006 TPI_01200_30
+
+  Rule 14: [225 cases, mean 7.807, range 4.51 to 10.11, est err 0.557]
+
+    if
+	PhysiographicRegions_Mask > 3
+	TPI_03000_30 > -13.47533
+	TWI_SAGA_10 > 16.81291
+    then
+	outcome = 0.537 + 1.248 TPI_01200_30 - 1.0657 TPI_01500_30
+	          + 2.076 TPI_00300_30 - 0.8666 TPI_00900_30
+	          + 0.387 TPI_03000_30 + 0.742 TPI_00600_30 + 5.894 TRI
+	          - 0.1499 Terrain_StandardisedHeight + 1.173 TWI_SAGA_10
+	          + 3.049 PhysiographicRegions_Mask + 0.0616 TPI_09000_30
+	          - 0.0528 TPI_06000_30 + 0.0473 TPI_07680_30
+	          - 0.0678 Convergence_240 - 0.793 MRVBF_32 + 0.0155 Depth
+	          + 0.008 TPI_00150_30 - 0.0008 Convergence_120
+	          - 0.0003 DEM_SRTM_Mask_filled_SAGA
+	          - 0.0011 Terrain_SlopeHeight - 0.003 TPI_00210_30
+	          - 0.0006 Convergence_480 - 0.0011 TPI_00480_30
+	          - 8e-006 SlopeLength + 0.0005 Convergence_030
+	          - 0.0006 Convergence_960
+
+  Rule 15: [154 cases, mean 7.878, range 5.46 to 10.08, est err 0.406]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	PhysiographicRegions_Mask <= 2
+	Terrain_MidSlopePosition <= 0.06264538
+	TPI_00600_30 > -1.456803
+    then
+	outcome = 25.958 - 28.52 TPI_00090_30 - 1.2824 Terrain_ValleyDepth
+	          + 13.588 TPI_00120_30 - 4.895 TPI_00210_30
+	          + 3.844 TPI_00240_30 + 25.75 TPI_00060_30
+	          - 53.51 Terrain_MidSlopePosition - 0.2505 TPI_06000_30
+	          - 0.4248 TPI_01920_30 - 1.059 Slope + 0.2208 TPI_03840_30
+	          + 0.1262 TPI_07680_30 + 0.2938 Terrain_SlopeHeight
+	          + 0.0851 Convergence_960 - 0.788 TRI - 0.299 TWI_SAGA_05
+	          - 0.0385 Convergence_480 - 0.0111 DEM_SRTM_Mask_filled_SAGA
+	          + 0.00552 Aspect - 0.109 TPI_00180_30 - 0.213 MRVBF_08
+	          + 0.059 TPI_00300_30 + 0.0106 Depth + 0.0101 TPI_03000_30
+	          + 0.0068 Convergence_120 - 0.006 Convergence_060
+	          + 8.5e-005 SlopeLength - 0.004 Convergence_240
+	          + 0.026 TWI_SAGA_10 + 0.004 Convergence_030
+	          - 0.006 TPI_00600_30 + 0.0045 TPI_00900_30
+	          - 0.36 Terrain_NormalisedHeight + 0.0007 TPI_09000_30
+	          - 0.014 MRRTF_16
+
+  Rule 16: [98 cases, mean 7.880, range 6.02 to 9.24, est err 0.245]
+
+    if
+	Convergence_060 > 3.648182
+	DEM_SRTM_Mask_filled_SAGA <= 355.7721
+	MRVBF_08 <= 4
+	PhysiographicRegions_Mask <= 2
+	TPI_00600_30 <= -1.456803
+	TPI_00960_30 <= -1.997383
+	TPI_03840_30 > -16.85114
+    then
+	outcome = 9.782 - 1.591 TPI_00120_30 - 0.1873 Terrain_SlopeHeight
+	          - 0.2608 TPI_00600_30 + 0.419 TPI_00300_30
+	          + 0.0646 Convergence_120 + 0.0876 TPI_01200_30
+	          + 1.08 TPI_00090_30 - 0.991 PhysiographicRegions_Mask
+	          + 0.14 TPI_00180_30 + 0.0242 Convergence_060
+	          - 0.146 TPI_00150_30 - 0.041 TPI_00210_30 + 0.0068 Depth
+	          - 0.0016 Terrain_ValleyDepth + 0.005 Slope - 0.023 TRI
+	          - 0.16 Terrain_NormalisedHeight + 0.05 TPI_00060_30
+	          - 0.0007 TPI_06000_30 + 0.0017 TPI_00900_30
+	          + 0.0004 TPI_09000_30 - 0.003 TPI_00240_30
+	          + 0.001 TPI_00960_30 - 0.0002 DEM_SRTM_Mask_filled_SAGA
+	          - 0.0005 TPI_01500_30 - 0.04 Terrain_MidSlopePosition
+	          + 0.0002 Terrain_StandardisedHeight
+
+  Rule 17: [72 cases, mean 7.929, range 6.54 to 9.92, est err 0.374]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA <= 355.7721
+	PhysiographicRegions_Mask <= 2
+	TPI_00600_30 <= -1.456803
+	TPI_00960_30 > -1.997383
+	TPI_01200_30 <= 2.495653
+	TPI_03840_30 > -16.85114
+    then
+	outcome = 3.531 + 0.7055 Terrain_ValleyDepth + 1.3931 TPI_00480_30
+	          - 0.6943 Terrain_SlopeHeight - 1.446 TPI_00240_30
+	          + 4.626 TPI_00090_30 + 1.574 MRVBF_08
+	          - 1.786 PhysiographicRegions_Mask
+	          + 0.0222 DEM_SRTM_Mask_filled_SAGA + 0.00323 Aspect
+	          + 0.0086 Depth + 0.046 TPI_00180_30 - 0.048 TPI_00150_30
+	          - 0.016 TPI_00210_30 + 0.017 TPI_00120_30
+	          - 0.08 Terrain_NormalisedHeight - 0.0012 TPI_00600_30
+	          + 0.0002 Terrain_StandardisedHeight - 0.0005 TPI_01200_30
+
+  Rule 18: [919 cases, mean 8.047, range 5.48 to 10.58, est err 0.305]
+
+    if
+	MRVBF_08 > 4
+    then
+	outcome = -4.199 - 82.108 TPI_00150_30 + 62.354 TPI_00180_30
+	          - 24.806 TPI_00210_30 + 42.326 TPI_00120_30
+	          + 10.921 TPI_00240_30 - 2.804 TPI_00300_30 + 7.235 TRI
+	          - 0.4554 TPI_01200_30 + 0.2865 TPI_00960_30
+	          + 0.3678 TPI_00480_30 - 0.1394 TPI_01500_30
+	          + 0.1016 TPI_01920_30 + 0.0757 TPI_03840_30
+	          - 0.0537 TPI_03000_30 + 0.0884 TPI_00900_30
+	          + 0.354 TWI_SAGA_05 - 0.0286 TPI_09000_30
+	          + 1.018 PhysiographicRegions_Mask
+	          + 3.14 Terrain_NormalisedHeight + 0.0155 Convergence_060
+	          - 0.173 MRVBF_08 - 0.0146 Convergence_030 + 0.0089 Depth
+	          + 0.6 Terrain_MidSlopePosition + 0.0075 Convergence_960
+	          - 0.063 MRRTF_16 - 0.0037 Terrain_ValleyDepth
+	          + 3.5e-005 SlopeLength
+
+  Rule 19: [114 cases, mean 8.123, range 6.56 to 9.08, est err 0.264]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA > 372.619
+	PhysiographicRegions_Mask <= 2
+    then
+	outcome = 23.015 - 0.2799 Terrain_ValleyDepth
+	          - 0.0315 DEM_SRTM_Mask_filled_SAGA - 0.312 TPI_00240_30
+	          - 0.786 TRI - 0.37 MRVBF_08 + 0.0643 TPI_00480_30
+	          + 0.504 PhysiographicRegions_Mask + 199 Curvature_General
+	          - 0.371 MRRTF_08 - 0.314 TPI_00090_30 + 0.092 TPI_00180_30
+	          - 0.09 TPI_00150_30 - 0.86 Terrain_MidSlopePosition
+	          + 0.0074 Depth + 0.0071 Convergence_030 - 0.029 TPI_00210_30
+	          - 0.0073 TPI_00600_30 + 0.01 Slope + 0.0034 TPI_00900_30
+	          - 0.012 TWI_SAGA_05 - 0.019 TPI_00120_30 - 0.0009 TPI_06000_30
+	          + 0.009 TWI_SAGA_10 - 0.0014 TPI_01500_30
+	          + 0.001 Convergence_120 + 0.0011 TPI_01920_30
+	          + 0.0009 TPI_03000_30 + 0.0005 TPI_07680_30
+	          - 0.03 TPI_00060_30 - 0.0007 Convergence_060
+	          - 0.0005 Convergence_240 - 0.0004 TPI_03840_30
+	          - 0.0007 Convergence_960 + 0.0006 TPI_00960_30
+
+  Rule 20: [374 cases, mean 8.133, range 6.07 to 9.52, est err 0.288]
+
+    if
+	Convergence_480 <= 30.84328
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	PhysiographicRegions_Mask <= 2
+	Terrain_MidSlopePosition > 0.1392356
+	TPI_00240_30 <= 5.566499
+	TPI_00600_30 > -1.456803
+	TPI_01920_30 > -5.670844
+    then
+	outcome = 14.327 - 0.3585 Terrain_ValleyDepth + 1.131 TPI_00240_30
+	          - 1.124 TPI_00180_30 + 0.1877 Terrain_SlopeHeight
+	          - 0.313 TPI_00300_30 - 0.0662 TPI_03840_30
+	          - 8.5 Terrain_NormalisedHeight + 0.0624 TPI_03000_30
+	          + 0.069 TPI_01500_30 - 0.0588 TPI_01920_30
+	          + 0.0191 TPI_06000_30 + 0.533 TPI_00090_30
+	          + 0.0303 Convergence_060 - 0.0338 Convergence_030
+	          - 0.0173 Convergence_240 + 0.181 MRVBF_08 + 0.036 Slope
+	          + 0.0091 Depth + 0.158 TRI - 0.0137 Convergence_960
+	          - 0.003 DEM_SRTM_Mask_filled_SAGA + 0.015 TPI_00600_30
+	          + 0.0061 Convergence_120 + 0.024 TPI_00210_30
+	          - 0.037 TPI_00120_30 - 0.021 TWI_SAGA_10 + 0.07 TPI_00060_30
+	          + 0.0007 TPI_07680_30 + 0.022 MRRTF_08 - 0.006 TWI_SAGA_05
+
+  Rule 21: [250 cases, mean 8.244, range 7.08 to 9.75, est err 0.382]
+
+    if
+	Convergence_060 <= 3.648182
+	Convergence_120 > -60.42859
+	DEM_SRTM_Mask_filled_SAGA <= 355.7721
+	MRVBF_08 <= 4
+	PhysiographicRegions_Mask <= 2
+	TPI_00090_30 > -1.358136
+	TPI_00600_30 <= -1.456803
+	TPI_00960_30 <= -1.997383
+	TPI_03840_30 > -16.85114
+    then
+	outcome = 2.301 - 4.221 TPI_00150_30 - 0.7899 Terrain_SlopeHeight
+	          + 9.582 TPI_00090_30 + 2.486 TPI_00210_30
+	          + 0.4104 Terrain_ValleyDepth - 0.7866 TPI_00480_30
+	          + 33.22 Terrain_NormalisedHeight - 1.019 TPI_00240_30
+	          - 0.3419 TPI_00960_30 - 8.08 TPI_00060_30
+	          + 0.2458 TPI_01200_30 - 0.0861 TPI_06000_30
+	          + 0.468 TPI_00300_30 - 0.0547 Terrain_StandardisedHeight
+	          + 0.081 TPI_03840_30 + 0.0556 TPI_07680_30
+	          + 0.1533 TPI_00600_30 - 0.0729 TPI_01500_30
+	          - 1.24 PhysiographicRegions_Mask - 0.0309 TPI_09000_30
+	          + 0.293 TWI_SAGA_10 + 0.0505 Convergence_480
+	          - 0.217 TPI_00180_30 + 0.0132 DEM_SRTM_Mask_filled_SAGA
+	          - 0.527 MRVBF_32 + 3.02 Terrain_MidSlopePosition
+	          + 0.179 TPI_00120_30 + 0.0058 Depth + 0.003 TPI_03000_30
+	          - 0.034 TRI + 0.0016 Convergence_120 + 2.2e-005 SlopeLength
+
+  Rule 22: [117 cases, mean 8.256, range 6.06 to 9.96, est err 0.309]
+
+    if
+	Convergence_480 <= 30.84328
+	DEM_SRTM_Mask_filled_SAGA <= 372.619
+	PhysiographicRegions_Mask <= 2
+	Terrain_MidSlopePosition > 0.06264538
+	Terrain_MidSlopePosition <= 0.1392356
+	TPI_00600_30 > -1.456803
+	TPI_01920_30 > -5.670844
+    then
+	outcome = 6.725 - 0.1431 TPI_01920_30 + 9.6 Terrain_MidSlopePosition
+	          - 0.1808 TPI_00600_30 + 0.0575 Terrain_ValleyDepth
+	          + 0.169 Slope - 0.759 TPI_00090_30 + 0.019 TPI_06000_30
+	          + 0.0333 Terrain_SlopeHeight + 0.112 TPI_00210_30
+	          + 0.454 PhysiographicRegions_Mask - 0.128 TPI_00180_30
+	          - 0.343 TRI - 0.0147 TPI_03840_30 + 0.0171 TPI_03000_30
+	          + 0.266 MRRTF_16 - 0.202 MRVBF_08 - 0.171 TPI_00120_30
+	          - 1.44 Terrain_NormalisedHeight + 0.038 TPI_00300_30
+	          + 0.0081 Convergence_120 + 0.32 TPI_00060_30 + 0.007 Depth
+	          + 0.0034 TPI_07680_30 - 0.0053 Convergence_240
+	          + 0.0052 TPI_01500_30 - 0.029 TWI_SAGA_05
+	          - 0.0013 DEM_SRTM_Mask_filled_SAGA - 0.003 Convergence_060
+	          - 0.009 TPI_00240_30 + 0.013 TWI_SAGA_10
+	          + 0.0021 Convergence_480 - 0.0022 Convergence_960
+	          + 0.0005 Convergence_030
+
+  Rule 23: [53 cases, mean 8.282, range 7.58 to 9.62, est err 0.213]
+
+    if
+	PhysiographicRegions_Mask > 2
+	PhysiographicRegions_Mask <= 3
+	TWI_SAGA_10 <= 15.92818
+    then
+	outcome = 7.659 - 0.0475 TPI_00480_30 + 0.0125 Depth
+	          + 0.0051 TPI_09000_30 + 0.72 Terrain_MidSlopePosition
+	          - 0.096 TPI_00090_30 - 0.038 TPI_00150_30 + 0.029 TPI_00180_30
+	          + 0.048 TPI_00120_30 + 0.12 TPI_00060_30 - 0.008 TPI_00210_30
+	          + 0.0016 TPI_01920_30 - 0.0018 TPI_01500_30 + 0.003 Slope
+	          - 0.0004 TPI_06000_30 + 0.0012 TPI_00600_30
+	          - 0.002 TPI_00300_30 + 0.0008 TPI_00960_30
+	          + 0.0004 TPI_03840_30 - 0.0008 TPI_00900_30
+	          + 0.0003 TPI_07680_30 + 0.003 TWI_SAGA_10
+
+  Rule 24: [68 cases, mean 8.342, range 6.14 to 9.99, est err 0.394]
+
+    if
+	DEM_SRTM_Mask_filled_SAGA <= 355.7721
+	PhysiographicRegions_Mask <= 2
+	TPI_00600_30 <= -1.456803
+	TPI_03840_30 <= -16.85114
+    then
+	outcome = 2058.057 + 1532.981 TPI_00090_30 - 90.5089 Terrain_SlopeHeight
+	          - 1806.91 TPI_00060_30 - 352.752 TPI_00120_30
+	          - 400.917 PhysiographicRegions_Mask + 63.929 TPI_00240_30
+	          - 3.5804 DEM_SRTM_Mask_filled_SAGA + 68.179 MRVBF_08
+	          + 0.0092 Depth
+
+  Rule 25: [22 cases, mean 8.583, range 7.68 to 10.32, est err 0.228]
+
+    if
+	Convergence_120 <= -60.42859
+	PhysiographicRegions_Mask <= 2
+	TPI_00960_30 <= -1.997383
+    then
+	outcome = 70.075 + 0.9865 Convergence_120 - 0.6548 Terrain_SlopeHeight
+	          + 0.637 TPI_00180_30 - 0.624 TPI_00150_30 - 0.148 TPI_00240_30
+	          + 0.0069 DEM_SRTM_Mask_filled_SAGA + 0.135 TPI_00120_30
+	          - 0.06 TPI_00210_30 + 0.039 TPI_00300_30 - 0.0147 TPI_00480_30
+	          + 0.0022 Convergence_060 + 0.002 Depth
+
+
+Evaluation on training data (3980 cases):
+
+    Average  |error|              0.263
+    Relative |error|               0.34
+    Correlation coefficient        0.91
+
+
+	Attribute usage:
+	  Conds  Model
+
+	   76%    77%    PhysiographicRegions_Mask
+	   45%    70%    MRVBF_08
+	   34%    56%    DEM_SRTM_Mask_filled_SAGA
+	   31%    73%    TPI_00600_30
+	   29%    67%    TWI_SAGA_10
+	   19%    49%    Terrain_StandardisedHeight
+	   18%    66%    Terrain_MidSlopePosition
+	   14%    53%    Convergence_480
+	   14%    64%    TPI_01920_30
+	   13%    41%    MRVBF_32
+	   12%    79%    TPI_03840_30
+	   12%    74%    TPI_00240_30
+	   11%    51%    TPI_00960_30
+	    9%    49%    Convergence_060
+	    8%    61%    TPI_03000_30
+	    8%    55%    TPI_00090_30
+	    7%    69%    TPI_06000_30
+	    7%    44%    Convergence_120
+	    3%    67%    TPI_01200_30
+	          97%    Depth
+	          93%    TPI_00120_30
+	          92%    TRI
+	          86%    TPI_00300_30
+	          85%    TPI_01500_30
+	          84%    TPI_00210_30
+	          82%    TPI_00180_30
+	          73%    Terrain_ValleyDepth
+	          73%    TPI_09000_30
+	          71%    Convergence_030
+	          70%    Terrain_SlopeHeight
+	          70%    TPI_00480_30
+	          68%    TPI_00150_30
+	          66%    TPI_00900_30
+	          63%    TPI_07680_30
+	          63%    Convergence_960
+	          62%    SlopeLength
+	          59%    TWI_SAGA_05
+	          54%    Terrain_NormalisedHeight
+	          52%    TPI_00060_30
+	          52%    Convergence_240
+	          40%    Slope
+	          30%    MRRTF_16
+	          16%    Curvature_General
+	          14%    MRRTF_08
+	           6%    Aspect
+	           6%    Curvature_CrossSectional
+
+
+Time: 0.4 secs

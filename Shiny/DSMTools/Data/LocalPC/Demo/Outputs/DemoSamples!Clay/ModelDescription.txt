@@ -1,0 +1,60 @@
+Model Name : DemoSamples!Clay
+Run on :  2018-12-12 11:28:53
+Run by :  sea084
+Project : Demo
+Sample File : DemoSamples
+Attribute : Clay
+Depth : 5
+Description : 
+
+
+Training Data
+--------------
+Number of Samples : 1181
+Number of Locations: 301
+Minimum Clay value : 8
+Maximum Clay value : 57
+Mean Clay value : 40.80356
+Std Dev of Clay values : 12.25639
+Depth Range : 0 to 1.45
+
+
+Covariates
+----------
+AACN
+Elevation
+Hillshading
+Landsat_Band1
+Light_insolation
+Mid_Slope_Positon
+MRVBF
+NDVI
+Slope
+Terrain_Ruggedness_Index
+TWI
+
+
+Model Parameters
+----------------
+Model Type : Cubist
+Training Method : Simple Random
+Max No. Rules : 25
+Model Extrapolation Threshold : 10
+Number of Folds : 2
+Number of Reps : 2
+
+
+Model Outputs
+----------------
+categoricalCovariates.txt
+inputCovariates.txt
+Maps
+Model!DemoSamples!Clay!ExternalValidation.csv
+Model!DemoSamples!Clay!InternalValidation.csv
+Model!DemoSamples!Clay!ObsVsMod.csv
+Model!DemoSamples!Clay.rds
+Model!DemoSamples!Clay.txt
+ModelDescription.txt
+
+
+
