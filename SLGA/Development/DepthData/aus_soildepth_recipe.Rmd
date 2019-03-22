@@ -1,0 +1,103 @@
+---
+title: "soil depth mapping"
+author: "Malone"
+date: "5 March 2019"
+output: html_document
+---
+
+
+### soil depth mapping workflow and notes
+
+### general notes
+(7/3/19) Will have to remove the bore hole rock surface data from the available dataset. This data seems to be confusing the modelling somewhat as inidcated by the validation data. By comparison, the GA rock outcrop data is nearly spot on.
+
+(21/3/19) There has been an element of trial and error with getting the workflow right and the final outputs looking sensible. Original maps from SLGA showed a pretty severe under-prediction of soil depth. We need a better way to map soil thickness that take sinto account censored data.
+
+* First cut of DSM invloved combining TERN soil sites and borelog data. TERN soil sites had to be treated in the situations where the data was censored. This has been dealt with by adding an addtional amount of thickness to the maximum depth. This extra bit is determined via simulated from a beta distribtuion. Probably need to come to some concrete reasoning about the selection of the beta distribution parameters. In the first nstance the bor elog data that we were suing came mostly from NSW. The resulting maps were very much weighted to the bore log data and there was a quite distinct pattern of deep soils in NSW only. Back to the drawing board, which entailed a more complete data mining of the bore log data base to get representations from all parts of the country
+
+* The second step used the more complete bore log data and the TERN soils database. This ramped up the total number of data points. The R code was somewhat refined and improved but for all intents and purposes was the same procedure as that used for the first cut. The resulting maps did show a much greater improvment in that genral continental patterns made a lot of sense. Zooming in and with some detailed checks it was revealed that we appear to be over predicting soil thickness. 
+
+* Third cut. Need some re-thinking about how to ge the model fitting better and not over-predicting soil depth. Things to consider include:
+  * Balancing the data set to have equal parts TERN soils and bore log data.
+  * Refining the beta distribution parameters to constrain them to no greater than ~3m
+  * Preferentially using bore log data in flood plain areas just so we get some better representation in the flood plain areas of non censored data.
+  * What does log tranformation do to the data and resulting predictions?
+* What was observed in the second round was that about 25% of observation were above 5m thickness. Most of the weight of observation were in the 1-3m area. By having such a large weight pulling on the distribution the prediction were pull upwards to greater thicknesses. Need to avoid doing this somehow. 
+  
+
+
+### Site data
+
+Effectively want to compile all the data sources into a simple table with:
+* ID
+* type of sample 
+* Lat and Long
+* soil depth
+
+All data is sitting in "/OSM/CBR/AF_DIGISCAPESM/"
+
+### organise TERN site data
+* Some queries of the NatSoil data base were made to assess the data base for soils where there was and wasn't the presence of a lithic or paralithic contact. Those where there was were assigned non-censored, and those where it was not defined it was assigned censored.
+* This step followed some general data cleaning. (Will need to go into some explanation about this)
+* The third step queried the formated data base to check soil non-censored soils les the 1.35m. This is an arbitary number but quite meaningful because it represents a considered average of soil coring depth. Any censored soils less than 1.35m were removed from the data set. We kept the remain censored soils greater than 1.35m
+
+
+Two data sets were created from the above processes:
+* Soil observation where there was observed lithic contact
+* Censored soil observations. These need to be later processes with simulation from beta distribution to derive a collection of possible soil depths.
+
+
+
+
+### bore hole data
+* national bore log database
+  * associate rscript was created to filter all data to come up with a meaningful data set. This R script goes through the various steps of rationally deciding upon which sites to include and prelcude from the analysis of soil thickness. 
+  File located at: "/AusSoilDSM/SLGA/Development"
+  * 2 seperate data bases were created from this database query
+    * data set corresponding to maximum soil depth
+    * data set corresponding to surface rock
+* Addtional surface rock daat set aquired from GA (supplied by Ross, original data come from Geosiences Australia)
+
+On consideration of some fitted models it was decided to remove from the complete data set thos observations within the bore log data that were consdered to be surficial rocks. I think there were some dodgy data amongs here and the models were getting quite confused.
+
+
+### covariates
+Sourced from the location "/OSM/CBR/AF/DIGISCAPESM/Covariates"
+
+Need to intersect data with with covariates. First compile all bits of data together and create 5 colum dataset. Look for replicated sites and remove. Then intersect.
+
+Final washup indicates 295 097 sites
+
+##### covariate intersection
+
+Data are intersected with all available rasters which include all the PCA surfaces and addtional layers including the agro-ecological regions, geomorphons, and some other climatic variable.
+
+This step takes an age. Quite rate limiting
+
+
+
+### modelling
+
+Using the ranger modelling here which for all intents and purposes is a random forest model. This model was selected becasue it seems to scale ok with the size of the given input data. We are working with nearly 300000 site locations.
+
+In the second iteration of modelling (the first was when i had soil bore logs for just mostly NSW), the modelling workflow has been majorly streamlined. basically i want to create 100 model realisations. I am submitting 20 jobs to the HPC with each job going to fit a model with a subset of the available data. I am using a 80/20 split. For each model fitted first a few processing steps are carried out:
+* Where there are surface rock observations a select a depth from a uniform distribution between 0 and 0.15m. 
+* For the censored data i draw a random value from a beta distribution and given shape parameters and then adjust the observed soil depth by adding a proporion of depth in accordance with the drawn random value. Could be some conjecture about the selection of the parameters of the beta distribution. 
+* Where there is actual observed soil thickness we just carry those values
+
+Essentially we create a simlated draw of the given data and treat this as a target variable in the model. This randomisation coupled with the randomisation of the data into the model effectely lets us wiggle the data around both of what the epected soil thickness values might be and the data that goes into the model.
+
+100 models were fitted in total. Each model took around 6 hours to complete. 600 hours of compute time
+
+
+
+
+#### mapping
+
+Mapping involves applying the fitted model upon layers of the available covariate data. In order to define the model uncertainty, models are read in indpendeltyl and applied across the covariates. Therefore at each pixel there will be $n$ number of predictions or realsiations. We need to build up these layers then we can go in and calculate some useful statisitcal moments. What is intended are such moments as prediction quantiles, and probabilities of soil thickness greater than a given threshold.
+
+
+
+
+
+
