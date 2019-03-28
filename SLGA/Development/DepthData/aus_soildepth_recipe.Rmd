@@ -11,18 +11,27 @@ output: html_document
 ### general notes
 (7/3/19) Will have to remove the bore hole rock surface data from the available dataset. This data seems to be confusing the modelling somewhat as inidcated by the validation data. By comparison, the GA rock outcrop data is nearly spot on.
 
-(21/3/19) There has been an element of trial and error with getting the workflow right and the final outputs looking sensible. Original maps from SLGA showed a pretty severe under-prediction of soil depth. We need a better way to map soil thickness that take sinto account censored data.
+(21/3/19) There has been an element of trial and error with getting the workflow right and the final outputs looking sensible. Original maps from SLGA showed a pretty severe under-prediction of soil depth. We need a better way to map soil thickness that takes into account censored data.
 
 * First cut of DSM invloved combining TERN soil sites and borelog data. TERN soil sites had to be treated in the situations where the data was censored. This has been dealt with by adding an addtional amount of thickness to the maximum depth. This extra bit is determined via simulated from a beta distribtuion. Probably need to come to some concrete reasoning about the selection of the beta distribution parameters. In the first nstance the bor elog data that we were suing came mostly from NSW. The resulting maps were very much weighted to the bore log data and there was a quite distinct pattern of deep soils in NSW only. Back to the drawing board, which entailed a more complete data mining of the bore log data base to get representations from all parts of the country
 
 * The second step used the more complete bore log data and the TERN soils database. This ramped up the total number of data points. The R code was somewhat refined and improved but for all intents and purposes was the same procedure as that used for the first cut. The resulting maps did show a much greater improvment in that genral continental patterns made a lot of sense. Zooming in and with some detailed checks it was revealed that we appear to be over predicting soil thickness. 
 
-* Third cut. Need some re-thinking about how to ge the model fitting better and not over-predicting soil depth. Things to consider include:
+* Third cut. Need some re-thinking about how to get the model fitting better and not over-predicting soil depth. Things to consider include:
   * Balancing the data set to have equal parts TERN soils and bore log data.
   * Refining the beta distribution parameters to constrain them to no greater than ~3m
   * Preferentially using bore log data in flood plain areas just so we get some better representation in the flood plain areas of non censored data.
   * What does log tranformation do to the data and resulting predictions?
 * What was observed in the second round was that about 25% of observation were above 5m thickness. Most of the weight of observation were in the 1-3m area. By having such a large weight pulling on the distribution the prediction were pull upwards to greater thicknesses. Need to avoid doing this somehow. 
+
+(28/3/19) Taking into consideration of the above, a revitalised modelling has been undertaken for the third cut. The revised method includes:
+* Going to two-step the modelling procedure whereby soils greater than 3m will be removed from the analysis in terms of the continuous modelling of soil thickness.
+* Going to have a binary model of <3m soils and >3m soils. 
+* treating the soil thickness target variable as a square root makes a resaonable distributution. It is a bit lumpy by is an overall improvement on the actual raw values.
+* A significant (about 100000) data points were removed from the analysis that wouls considered in the second round. Removed any observations where soil depth was greater than 10m. There will be very rare exceptions where such soils have been observed, but i believe some serious errors are in the bore log data. I think even after removing soils >10m there are still some serious issues in the data as identified by looking at the observations given the geomorphon units that the data exisit in. Some very deep soils were found up hilltops and crests which defies usual logic. Consequently for the thrid round, bore log data in certain landscape positions, exceeding a certain depth (3m) were removed from the analyis altogether. This is a source of uncertainty that can be relatively well managed using some basic understanding of soil science.
+* Have made some slight adjustments to the beta distribution values that accompany the censored data. Essenitally the shape parameters of 2 and 5.5 were selcted base on the crieteria that for a given 1.35m soils, less than 10% and simulated values would breach 2m. This i hope gives a bit more rigor into the setting of these values and a reasonable justification.
+* Largely the approach is relatively unchanged for everything else. The key feature of the thrid round is that we are working with much less data. Or another way to look at is is that we have hopefully removed the bulk of conflicting data using the best knowledge and steps that we have. 
+
   
 
 
@@ -39,7 +48,7 @@ All data is sitting in "/OSM/CBR/AF_DIGISCAPESM/"
 ### organise TERN site data
 * Some queries of the NatSoil data base were made to assess the data base for soils where there was and wasn't the presence of a lithic or paralithic contact. Those where there was were assigned non-censored, and those where it was not defined it was assigned censored.
 * This step followed some general data cleaning. (Will need to go into some explanation about this)
-* The third step queried the formated data base to check soil non-censored soils les the 1.35m. This is an arbitary number but quite meaningful because it represents a considered average of soil coring depth. Any censored soils less than 1.35m were removed from the data set. We kept the remain censored soils greater than 1.35m
+* The third step queried the formated data base to check soil non-censored soils less the 1.35m. This is an arbitary number but quite meaningful because it represents a considered average of soil coring depth. Any censored soils less than 1.35m were removed from the data set. We kept the remain censored soils greater than 1.35m
 
 
 Two data sets were created from the above processes:
@@ -78,7 +87,7 @@ This step takes an age. Quite rate limiting
 
 ### modelling
 
-Using the ranger modelling here which for all intents and purposes is a random forest model. This model was selected becasue it seems to scale ok with the size of the given input data. We are working with nearly 300000 site locations.
+Using the ranger modelling here which for all intents and purposes is a random forest model. This model was selected becasue it seems to scale ok with the size of the given input data. We are working with nearly 300000 site locations. Note that this is the total on hand and has been severly winnowed pending the thrid round of modelling to remove spurious data. We are done to around 142200 points now.
 
 In the second iteration of modelling (the first was when i had soil bore logs for just mostly NSW), the modelling workflow has been majorly streamlined. basically i want to create 100 model realisations. I am submitting 20 jobs to the HPC with each job going to fit a model with a subset of the available data. I am using a 80/20 split. For each model fitted first a few processing steps are carried out:
 * Where there are surface rock observations a select a depth from a uniform distribution between 0 and 0.15m. 
@@ -88,6 +97,10 @@ In the second iteration of modelling (the first was when i had soil bore logs fo
 Essentially we create a simlated draw of the given data and treat this as a target variable in the model. This randomisation coupled with the randomisation of the data into the model effectely lets us wiggle the data around both of what the epected soil thickness values might be and the data that goes into the model.
 
 100 models were fitted in total. Each model took around 6 hours to complete. 600 hours of compute time
+
+Once the various data cleansing procedures were performed for round 3 modelling the steps for modelling and data simulation are largely the the same as for round 2, to the extent that the underlying model code is the same albiet for a few changes like the transformation of the target variable and associated backtransformation to assess the quality of the predictions.
+
+The third round also contains the workflow for binary modelling of deep vs not very deep soils. 
 
 
 
