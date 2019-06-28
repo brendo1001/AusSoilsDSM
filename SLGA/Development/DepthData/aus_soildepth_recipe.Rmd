@@ -110,6 +110,16 @@ The third round also contains the workflow for binary modelling of deep vs not v
 Mapping involves applying the fitted model upon layers of the available covariate data. In order to define the model uncertainty, models are read in indpendeltyl and applied across the covariates. Therefore at each pixel there will be $n$ number of predictions or realsiations. We need to build up these layers then we can go in and calculate some useful statisitcal moments. What is intended are such moments as prediction quantiles, and probabilities of soil thickness greater than a given threshold.
 
 
+### Plan of work following pedometrics presentation
+
+Efforts of the round 3 work were presented at the Pedometrics conference in Guelph, Canada. Was generally well recieved. Some things to include now to update this map (now going to be round 4):
+* model shallow soils seperately
+* Include the new climate data
+* spatial modelling of the residuals
+
+I think all other steps in the process are quite well established now.
+
+
 
 
 
