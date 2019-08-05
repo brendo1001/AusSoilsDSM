@@ -105,7 +105,7 @@ The third round also contains the workflow for binary modelling of deep vs not v
 
 
 
-#### mapping
+#### Mapping
 
 Mapping involves applying the fitted model upon layers of the available covariate data. In order to define the model uncertainty, models are read in indpendeltyl and applied across the covariates. Therefore at each pixel there will be $n$ number of predictions or realsiations. We need to build up these layers then we can go in and calculate some useful statisitcal moments. What is intended are such moments as prediction quantiles, and probabilities of soil thickness greater than a given threshold.
 
@@ -118,6 +118,41 @@ Efforts of the round 3 work were presented at the Pedometrics conference in Guel
 * spatial modelling of the residuals
 
 I think all other steps in the process are quite well established now.
+
+Update as of 22/07/19
+
+* Setting up of ranger models. Rather than prediciting soil thickness <3m, i have changed this to 2m as we do not have to deal with the postive long tail distribution as i did when i was looking at <3m. In the final products of version 3 there was a bit of a gulf from about 2 to 3m. hopefully by re-defining what is 'deep soil' will address this issue.
+
+* ranger models (x50) being fitted on HPC (22/07/19). These models are predicting soil thickness between the ranges of 0-2m.
+* ranger models of deep (>2m) soils and not so deep soils (<2m). This is a binary model. Bootstrapping with 50 models.
+* ranger models of rock outcrops and everything else. This is a binary model. Bootstrapping with 50 models.
+
+
+How to treat model residuals? 
+* May just have to sacrifice some observations so that a validation can happen.
+* Possible process will be to predict models for all data points and derive a median value. Only do this for non-censored data.
+* Estimate residual (obs - median predicted value)
+* Implement my crude kriging procedure which entails fitting the global model followed by kriging which will be made compputationally effecient by only capturing observation within a defined target zone. Will be a bit of flaffing about here.
+
+
+
+### Manuscript planning
+
+#### Methodoloical workflow
+
+1. The data:
+
+* point data: TERN site data collation, Bore log data, GA rock outcrop data. Basic descriptions of data
+
+- Processing steps of the point data. The creation of subsets for the modelling component
+
+* raster data: Covariates considered and the PCA workflow for data reduction within the SCORPAN workflow 
+
+
+
+
+
+
 
 
 
