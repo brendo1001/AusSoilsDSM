@@ -110,7 +110,7 @@ The third round also contains the workflow for binary modelling of deep vs not v
 Mapping involves applying the fitted model upon layers of the available covariate data. In order to define the model uncertainty, models are read in indpendeltyl and applied across the covariates. Therefore at each pixel there will be $n$ number of predictions or realsiations. We need to build up these layers then we can go in and calculate some useful statisitcal moments. What is intended are such moments as prediction quantiles, and probabilities of soil thickness greater than a given threshold.
 
 
-### Plan of work following pedometrics presentation
+## Plan of work following pedometrics presentation
 
 Efforts of the round 3 work were presented at the Pedometrics conference in Guelph, Canada. Was generally well recieved. Some things to include now to update this map (now going to be round 4):
 * model shallow soils seperately
@@ -133,6 +133,21 @@ How to treat model residuals?
 * Possible process will be to predict models for all data points and derive a median value. Only do this for non-censored data.
 * Estimate residual (obs - median predicted value)
 * Implement my crude kriging procedure which entails fitting the global model followed by kriging which will be made compputationally effecient by only capturing observation within a defined target zone. Will be a bit of flaffing about here.
+
+
+### RCODE collection
+
+
+* Spatial prediction of continuous and cateogrical map outputs (per tile estimation)
+
+- Applying (kriging) globally fitted variogram [residual_modelling_rangermodels_spatialise.R] 
+- Applying the categorical model for distinguishing between deep and not deep soils [spatialise_categorical_deep_vs_notdeep_SD_model.R] 
+- Applying the categorical model for distinguishing between rock outcrops and not rock outcrops [spatialise_categorical_rock_vs_notrock_outcrop_model.R] 
+- Applying the continuous model of soil thickness prediction [spatialise_continuous_SD_model.R] 
+
+* Integration of continuous and categorical map outputs to derive products (13 products derived).
+
+* Tile mosaicing of all outputs
 
 
 
