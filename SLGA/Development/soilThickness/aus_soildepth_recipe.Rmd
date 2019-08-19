@@ -137,6 +137,17 @@ How to treat model residuals?
 
 ### RCODE collection
 
+* Data Wrangling
+
+
+* Model Fitting
+
+- variogram modelling of soil thickness [residual_variogram_modelling_rangermodels.R] 
+- Ranger model fitting of the categorical prediction for distinguishing between deep and not deep soils [rangerModelling_soilDepth_categorical_deep_vs_notdeep.R] 
+- Ranger model fitting of the categorical prediction for distinguishing between rock outcrops from not rock outcrops [rangerModelling_soilDepth_categorical_rock_vs_notrock.R] 
+- Ranger model fit of soil thickness as a continuous variable [rangerModelling_soilDepth_continuous.R]
+- Determination of Ranger model hyperparameters for soil thickness (continuous variable) [rangerModelling_soilDepth_continuous_get fit parameters.R]
+
 
 * Spatial prediction of continuous and cateogrical map outputs (per tile estimation)
 
