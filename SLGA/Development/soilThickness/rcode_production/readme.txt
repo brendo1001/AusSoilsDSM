@@ -1,8 +1,17 @@
 # Organisation of R coded workflow for national mapping of soil thickness
 
 ## Data Wrangling
-* Basic GIS mapping of point data [micelaneous/soilDepth_GIS_file_pointData.R]
-* Query the bore log data and assign soil thickness estimates [boreLog_queries.R]
+1. Data Wrangling
+
+* Processing of the national site collation observation data to derive estimates of the soil thickness. Determination of whether observations were censored or not. [TERN_sitedata folder]
+* Determination of soil thickness from the bore log data [boreLog_queries.R]
+* Covariate data extraction [site_data_covariate_extraction.R]
+* Setting up of model frames for the spatial modelling (for all variables) [model_data_preparation.R]
+
+** Note that there were a few non R steps used in data wrangling where instead JMP was used. Some things included:
+** Determination of observations to get rid of. Some criteria around removal of censored data where censoring was less than 1.35m. Removal of inordinately deep soils ie >15m (i think was the threshold). [[I will think of others]] 
+
+*** There are some older bits of R code from Ross with initial workflow for processing the bore log data. 
 
 
 ## Model Fitting
@@ -20,7 +29,7 @@
 
 
 ## Pulling it all together
-* Integration of continuous and categorical map outputs to derive products (13 products derived).[spatialise_SD_model__statisticalmoments.R]
+* Integration of continuous and categorical map outputs to derive products (13 products derived).[spatialise_SD_model__statisticalmoments.R (in modelspatialisation folder]
 * Tile mosaicing of all outputs [folder: tileMosaic contains 13 seperate R scripts for each statistical moment.]
 
 

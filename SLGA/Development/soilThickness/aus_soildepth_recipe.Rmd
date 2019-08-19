@@ -113,9 +113,9 @@ Mapping involves applying the fitted model upon layers of the available covariat
 ## Plan of work following pedometrics presentation
 
 Efforts of the round 3 work were presented at the Pedometrics conference in Guelph, Canada. Was generally well recieved. Some things to include now to update this map (now going to be round 4):
-* model shallow soils seperately
-* Include the new climate data
-* spatial modelling of the residuals
+* model shallow soils seperately (completed July 2019)
+* Include the new climate data (completed July 2019)
+* spatial modelling of the residuals (completed July 2019)
 
 I think all other steps in the process are quite well established now.
 
@@ -137,10 +137,19 @@ How to treat model residuals?
 
 ### RCODE collection
 
-* Data Wrangling
+1. Data Wrangling
+
+* Processing of the national site collation observation data to derive estimates of the soil thickness. Determination of whether observations were censored or not. [TERN_sitedata folder]
+* Determination of soil thickness from the bore log data [boreLog_queries.R]
+* Covariate data extraction [site_data_covariate_extraction.R]
+* Setting up of model frames for the spatial modelling (for all variables) [model_data_preparation.R]
+
+** Note that there were a few non R steps used in data wrangling where instead JMP was used. Some things included:
+** Determination of observations to get rid of. Some criteria around removal of censored data where censoring was less than 1.35m. Removal of inordinately deep soils ie >15m (i think was the threshold). [[I will think of others]] 
 
 
-* Model Fitting
+
+2. Model Fitting
 
 - variogram modelling of soil thickness [residual_variogram_modelling_rangermodels.R] 
 - Ranger model fitting of the categorical prediction for distinguishing between deep and not deep soils [rangerModelling_soilDepth_categorical_deep_vs_notdeep.R] 
@@ -149,16 +158,15 @@ How to treat model residuals?
 - Determination of Ranger model hyperparameters for soil thickness (continuous variable) [rangerModelling_soilDepth_continuous_get fit parameters.R]
 
 
-* Spatial prediction of continuous and cateogrical map outputs (per tile estimation)
+3. Spatial prediction of continuous and cateogrical map outputs (per tile estimation)
 
 - Applying (kriging) globally fitted variogram [residual_modelling_rangermodels_spatialise.R] 
 - Applying the categorical model for distinguishing between deep and not deep soils [spatialise_categorical_deep_vs_notdeep_SD_model.R] 
 - Applying the categorical model for distinguishing between rock outcrops and not rock outcrops [spatialise_categorical_rock_vs_notrock_outcrop_model.R] 
 - Applying the continuous model of soil thickness prediction [spatialise_continuous_SD_model.R] 
+- Integration of continuous and categorical map outputs to derive products (13 products derived) [spatialise_SD_model__statisticalmoments.R]
 
-* Integration of continuous and categorical map outputs to derive products (13 products derived).
-
-* Tile mosaicing of all outputs
+* Tile mosaicing of all outputs [tileMosaic folder]
 
 
 
