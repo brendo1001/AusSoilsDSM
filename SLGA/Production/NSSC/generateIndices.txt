@@ -1,0 +1,296 @@
+DROP INDEX IF EXISTS `idx_vegStrata`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_vegStrata` ON `VEG_STRATA` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`vstr_code`
+);
+DROP INDEX IF EXISTS `idx_vegSpecies`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_vegSpecies` ON `VEG_SPECIES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`vstr_code`,
+	`vsp_no`
+);
+DROP INDEX IF EXISTS `idx_surfaceCoarseFrags`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_surfaceCoarseFrags` ON `SURF_COARSE_FRAGS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`scf_no`
+);
+DROP INDEX IF EXISTS `idx_surfConditions`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_surfConditions` ON `SURF_CONDITIONS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`scon_no`
+);
+DROP INDEX IF EXISTS `idx_subMineralComps`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_subMineralComps` ON `SUB_MINERAL_COMPS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`sb_no`
+);
+DROP INDEX IF EXISTS `idx_structures`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_structures` ON `STRUCTURES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`str_no`
+);
+DROP INDEX IF EXISTS `idx_strengths`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_strengths` ON `STRENGTHS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`strg_no`
+);
+DROP INDEX IF EXISTS `idx_states`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_states` ON `STATES` (
+	`STATE_CODE`
+);
+DROP INDEX IF EXISTS `idx_sites`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_sites` ON `SITES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`
+);
+DROP INDEX IF EXISTS `idx_siteMgtPacs`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_siteMgtPacs` ON `SITE_MNG_PRACS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`luse_no`
+);
+DROP INDEX IF EXISTS `idx_segregations`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_segregations` ON `SEGREGATIONS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`seg_no`
+);
+DROP INDEX IF EXISTS `idx_samples`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_samples` ON `SAMPLES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`samp_no`
+);
+DROP INDEX IF EXISTS `idx_roots`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_roots` ON `ROOTS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`root_no`
+);
+DROP INDEX IF EXISTS `idx_rockOutcrops`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_rockOutcrops` ON `ROCK_OUTCROPS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`ro_no`
+);
+DROP INDEX IF EXISTS `idx_projects`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_projects` ON `PROJECTS` (
+	`agency_code`,
+	`proj_code`
+);
+DROP INDEX IF EXISTS `idx_phs`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_phs` ON `PHS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`ph_no`
+);
+DROP INDEX IF EXISTS `idx_pans`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_pans` ON `PANS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`pan_no`
+);
+DROP INDEX IF EXISTS `idx_officers`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_officers` ON `OFFICERS` (
+	`agency_code`,
+	`offr_code`
+);
+DROP INDEX IF EXISTS `idx_obsmgtpracs`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_obsmgtpracs` ON `OBS_MNG_PRACS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`omp_no`
+);
+DROP INDEX IF EXISTS `idx_observations`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_observations` ON `OBSERVATIONS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`
+);
+DROP INDEX IF EXISTS `idx_mottles`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_mottles` ON `MOTTLES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`mott_no`
+);
+DROP INDEX IF EXISTS `idx_microreliefs`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_microreliefs` ON `MICRORELIEFS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`mr_no`
+);
+DROP INDEX IF EXISTS `idx_landuses`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_landuses` ON `LAND_USES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`luse_no`
+);
+DROP INDEX IF EXISTS `idx_labMethods`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_labMethods` ON `LAB_METHODS` (
+	`AGENCY_CODE`,
+	`LABM_CODE`
+);
+DROP INDEX IF EXISTS `idx_horizons`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_horizons` ON `HORIZONS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`
+);
+DROP INDEX IF EXISTS `idx_fabrics`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_fabrics` ON `FABRICS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`fab_no`
+);
+DROP INDEX IF EXISTS `idx_exotics`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_exotics` ON `EXOTICS` (
+	`AGENCY_CODE`,
+	`PROJ_CODE`,
+	`S_ID`,
+	`O_ID`,
+	`EX_NO`
+);
+DROP INDEX IF EXISTS `idx_elemGeomorphs`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_elemGeomorphs` ON `ELEM_GEOMORPHS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`egm_no`
+);
+DROP INDEX IF EXISTS `idx_disturbances`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_disturbances` ON `DISTURBANCES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`dist_no`
+);
+DROP INDEX IF EXISTS `idx_cutans`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_cutans` ON `CUTANS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`cutan_no`
+);
+DROP INDEX IF EXISTS `idx_colors`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_colors` ON `COLOURS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`col_no`
+);
+DROP INDEX IF EXISTS `idx_codes`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_codes` ON `CODES` (
+	`AGENCY_CODE`,
+	`CODE_DOMAIN`,
+	`CODE_VALUE`
+);
+DROP INDEX IF EXISTS `idx_coarseFrags`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_coarseFrags` ON `COARSE_FRAGS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`cf_no`
+);
+DROP INDEX IF EXISTS `idx_Pores`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_Pores` ON `PORES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`pore_no`
+);
+DROP INDEX IF EXISTS `idx_LabResults`;
+CREATE INDEX IF NOT EXISTS `idx_LabResults` ON `LAB_RESULTS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`samp_no`,
+	`labr_no`
+);
+DROP INDEX IF EXISTS `idx_Archive_Samples`;
+CREATE INDEX IF NOT EXISTS `idx_Archive_Samples` ON `ARCHIVE_SAMPLES` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`o_id`,
+	`h_no`,
+	`samp_no`
+);
+DROP INDEX IF EXISTS `idx_Agencies`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_Agencies` ON `AGENCIES` (
+	`STATE_CODE`,
+	`AGENCY_CODE`
+);
+DROP INDEX IF EXISTS `idx+patt_geomporphs`;
+CREATE UNIQUE INDEX IF NOT EXISTS `idx+patt_geomporphs` ON `PATT_GEOMORPHS` (
+	`agency_code`,
+	`proj_code`,
+	`s_id`,
+	`pgm_no`
+);
