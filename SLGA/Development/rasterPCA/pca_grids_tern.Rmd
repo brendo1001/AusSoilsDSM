@@ -1,0 +1,350 @@
+---
+title: "TERN GRID PCA WORKFLOW"
+author:
+- name: Brendan Malone
+  affiliation: 
+  - CSIRO Agriculture and Food
+  - Additional affiliation
+  email: brendan.malone@csiro.au
+date: "7 January 2019"
+output: html_document
+bibliography: book.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+```
+
+## Introduction
+
+This is a general workflow for creating rasters of the principal components of all the compiled environmental data layers associated with the TERN project. These data layers include the digital elevation model and derivatives, climate, and parent material data, and some data layers derived from remote sensing imagery. The workflow can be adapted for other related projects and objectives with similar sorts of data. The case in point here is the Australian national collation of environmental data layers. 
+
+For background, at the present count there are some 130 environmental layers compiled for the TERN landscapes. These are grouped in accordance to soil forming factors -- more specifically the scorpan factors as described in @mcbratney_digital_2003 . For example, the groupings are associated with climate, organisms, parent material, relief, other soil information, and location. 
+
+To deal with such a large compilation of data layers it is thought that dimension reduction could be done in order to reduce the overall number of possible layers to include in a model without omitting potentially useful spatial information. [Principal component analysis or PCA](https://www.r-bloggers.com/principal-component-analysis-in-r/) is the goto method here, where it allows one to decompose given variables into orthogonal components. Each component describes a certain percentage of the overall variability in the data with the first explaining the greatest proportion, followed by the second, third and so on. As such with only just a handful of components, one may be able to explain a very large proportion of the overall variance of all the given data layers. PCA is therefore quite popular in a number of data analysis workflows and a powerful tool for predictive modelling where there are numerous data layers. 
+
+In order to keep to keep to the soil forming factor construct the workflow described below performs PCA on the associated data layers within each soil forming factor grouping.
+
+## General workflow
+
+This workflow works and provides results as to be expected. of course with anything there will always be alternatives. 
+
+1. [Place a sample configuration of size x across the whole study area](#step1).
+2. [Extract information pertaining to the environmental data layers at each of the points](#step2).
+3. [perform PCA](#step3)
+4. [Spatialise the PCA to create maps of each principal component](#step4). 
+
+These steps are relatively easy to follow and are heavily based on the general procedure that can be found [here](https://stackoverflow.com/questions/19866009/pca-using-raster-datasets-in-r). However this simple workflow becomes quite complicated and demanding when considering datasets of the size and extent of the Australian continent. 
+
+The workflow below will cover each of the the above steps. While the steps are documented somewhat, they will not likely be reproducible in any way as the data are stored in a remote and secure location, and much of the procedure is carried out within a high performance computing environment. Nevertheless, the document will at least help me recall the step later on and will also help others construct a similar workflow suited to their own data and objectives.
+
+### Important notes
+
+* The example workflow below is focused on one grouping of the scorpan variables: relief. naturally, one would engage in a similar workflow for the other variables 
+* The workflow just contains R syntax without the associated R console outputs. The reason for this is to make to composition of this document relative simple and fast to create. Having the R outputs helps with re-producing the workflow, but as this workflow is not entirely re-producible for the reasons described above, the R script has been annotated to provide clarity in the process/s
+.
+
+## Step 1: Place a sample configuration of size x across the whole study area.{#step1}
+
+It would be virtually impossible to organize all available raster layers into individual columns of a table and then perform a PCA. Therefore to get around this issue is to take a sufficiently large sample from the rasters, perform the PCA with these samples, then predict the PCs given each of the raster layers. This will ultimately create raster layers of the PCs. 
+
+To prepare for the sampling, we first must organize the rasters.
+
+
+
+```{r raster_prep, echo = TRUE, message=FALSE,eval=FALSE}
+### Relief Rasters
+## data organisation
+## raster stacking
+
+ 
+# working directory string (place where all the rasters sit)
+wds<- "/OSM/CBR/AF_DIGISCAPESM/work/CoVariates/"
+
+
+
+# Covariate table (helpful info about each covariate data layer) [probably will be updated]
+dat.table<- read.csv(paste0(wds, "Complete_Covariate_List.csv"))
+
+
+## libraries
+library(raster);library(sp); library(rgdal)
+
+
+## NationalGrids: Relief variables
+list.files(path = paste0(wds,"Relief"),  pattern="tif$", full.names=FALSE)
+c.maps<- list.files(path = paste0(wds,"Relief"),pattern='tif$',full.names=T)
+
+# organise file paths into a table 
+datF<- as.data.frame(c.maps)
+names(datF)[1]<- "LongName"
+# short name (for later inexing purposes)
+datF$ShortName<- list.files(paste0(wds,"Relief"),  pattern="tif$", full.names=FALSE)
+datF
+
+
+#assign raster types to data (this is quite a manual step to do this assignment) [possibly an automated way can be found]
+datF$Type<- NA
+datF$Type<- c("num", "num", "num","num","num", "num","char","num", "num","num","num", "num","num",
+              "num", "num","num","num") 
+
+
+## Stack of all relief covariates
+relief.stack<- stack()
+for (i in 1:length(c.maps)){
+  relief.stack<- stack(relief.stack,raster(c.maps[i]))}
+relief.stack
+
+# Stack of all numeric relief covariates
+c.maps.num<- c.maps[which(datF$Type=="num")]
+relief.stack.num<- stack()
+for (i in 1:length(c.maps.num)){
+  relief.stack.num<- stack(relief.stack.num,raster(c.maps.num[i]))}
+relief.stack.num
+
+# Stack of all non-numeric relief covariates
+c.maps.char<- c.maps[which(datF$Type!="num")]
+c.maps.char
+relief.stack.char<- stack()
+for (i in 1:length(c.maps.char)){
+  relief.stack.char<- stack(relief.stack.char,raster(c.maps.char[i]))}
+relief.stack.char
+
+
+## Save data stack to file
+save(relief.stack, relief.stack.num, relief.stack.char, datF, file = paste0(wds,"aus_covariates_stack_RELIEF.RData"))
+
+# To load the data again
+load(paste0(wds,"aus_covariates_stack_RELIEF.RData"))
+```
+
+One of the assumed features with the above script is that all the raster data layers are of the same extent and resolution. Raster stacking will just not happen otherwise. Secondly, the reason why so much trouble was spent determining the the raster type (numerical or factorial) is because we can only do PCA on the numerical variables. In the later steps we will only be focusing on the numerical raster stacks. 
+
+Now to generate a spatial point configuration across the extent of the Australian continent.
+
+```{r sample_raster, echo = TRUE, message=FALSE,eval=FALSE}
+# generate a point dataset of random locations within the Australian boundary extents
+
+## libraries
+library(raster);library(sp); library(rgdal)
+
+## generate a sample data set
+
+# load the boundary layer of australia
+bound<- readOGR("/home/brendo1001/mywork/redUSB/USYD/PRJ-SIA_dataware/datasets/TERN/Australia Topo/1259030001_ste11aaust_shape/STE11aAust.shp")
+
+plot(bound)
+bound
+
+# perform a sample
+rsites<- spsample(bound,n=300000,"random")
+plot(rsites, add=T, cex=0.5)
+
+#transform CRS
+rsites_wgs<- spTransform(rsites, CRSobj = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+# ensure coordinate systems are equivalent
+crs(relief.stack)
+crs(rsites_wgs)
+
+# prepare data for export
+rsites_wgs<-as.data.frame(rsites_wgs)
+rsites_wgs$FID<-seq(1, nrow(rsites_wgs), 1) 
+names(rsites_wgs)[1:2]<- c("long", "lat")
+
+#save to file
+write.table(rsites_wgs, "/home/brendo1001/mywork/bowenDrive2/datasets/aus_randomPoints_wgs84.txt", sep = ",", row.names = F, col.names = T)
+```
+
+The sticking point here is the choice of how many samples to take. Above, 300 000 are chosen. This is largely an arbitrary number selection but perhaps sufficient to capture the variation in the data layers that are available. The sampling is done randomly. We use a boundary extent of the Australian coastline to constrain sample site placement. Note that the sampling does take quite amount of time to run on a standard laptop computer. The figure below shows the spatial coverage of the points within the bounds of the coastline.
+
+```{r fig1, echo=FALSE, fig.width=15,fig.cap="Figure: 300 000 points distributed randomly throughout boundary extent of Australian continent."}
+# Small fig.width
+include_graphics("/home/brendo1001/mywork/dropboxShare/2019/TERNLandscapes2019/docs/images/ausSites300000.png")
+```
+
+
+
+[back to top](#top)
+
+## Step 2: Extract information pertaining to the environmental data layers at each of the points.{#step2}
+
+Now that we have our points, we just need to extract the information from each raster layer at each of those points.
+
+```{r extract_raster, echo = TRUE, message=FALSE,eval=FALSE}
+
+## load random point data
+pdat<- read.table("/OSM/CBR/AF_TERN_MAL_DEB/WORK/datasets/aus_randomPoints_wgs84.txt", header = T, sep = ",")
+
+# spatialise
+coordinates(pdat)<- ~ long + lat
+crs(pdat)<- crs(relief.stack)
+pdat
+
+## extract raster values
+sr <- extract(relief.stack.num, pdat, sp= 1, method = "simple")  # VERY RATE LIMITING
+# save object
+saveRDS(sr, file = "/OSM/CBR/AF_TERN_MAL_DEB/WORK/datasets/national/rasterdata/reliefdat300000.rds")
+
+```
+
+
+[back to top](#top)
+
+## Step 3: Perform PCA.{#step3}
+
+Next is the straightforwards step of performing PCA. 
+
+```{r pca, echo = TRUE, message=FALSE,eval=FALSE}
+# run PCA on random sample 
+# follows directly from code snippet above 
+sr.df<- as.data.frame(sr)
+str(sr.df)
+# remove instances of missing data
+sr.df<- sr.df[complete.cases(sr.df),]
+
+# do the pca
+pca <- prcomp(sr.df[,4:ncol(sr.df)], scale=TRUE, retx=FALSE) 
+summary(pca)
+saveRDS(pca, file="/OSM/CBR/AF_TERN_MAL_DEB/WORK/datasets/national/rasterdata/reliefdat300000_PCA.rds")
+
+```
+
+Saving the PCA object allows us to load it later when we want to predict the PCs using the raster grids. 
+
+[back to top](#top)
+
+## Step 4: Spatialise the PCA to create maps of each principal component.{#step4}
+
+On a standard computer this step will bring about computational difficulties. On a small raster stack dataset we can simply just load all the rasters up and then predict the PCs quite simply with 1 or 2 lines of code. Dealing with the whole Australian continent requires a bit more forethought and planning to efficiently implement. One useful method comes in the way of tiling. That is, dicing up all the continental rasters into tiles of digestible size, and then running the PCA predict in a parallel way. This means we can work on many tiles simultaneously, or even sequentially if we like. What tiling effectively does is allow us to break up a seemingly very large computational task into many smaller and digestible tasks without blowing up the CPU. Once all the tiles have been processed we can them mosaic them to create a single continental raster. There are a few sub-steps within this last step to consider in order to implement to the spatialisation of PCA across very large rasters.
+
+A workflow for performing the slicing and dicing of large rasters is given in another document. The figure below illustrates the distribution of tiles over the continent, with each individually labeled. For each tile, there are the same rasters (and each has the same name) as there are continental layers. Each tile is approximately a 65km square. There are 2172 tiles. With this raster data set up like it is in tiles, it becomes a relatively simple task to perform continental operations as we can just cycle through tile by tile. Nevertheless, there is a computational effort and time required to do such tasks, but at least we can be rest assured that we will not run into any memory issues.   
+
+```{r fig2, echo=FALSE, fig.width=15,fig.cap="Figure: Distribution of raster tiles for Australian continent"}
+# Small fig.width
+include_graphics("/home/brendo1001/mywork/dropboxShare/2019/TERNLandscapes2019/docs/images/auscont_tiles.png")
+```
+
+```{r spatialise_pca, echo = TRUE, message=FALSE,eval=FALSE}
+## libraries (note the use of libraries associated with parallel computing)
+library(parallel);library(sp);library(rgdal);library(doParallel);library(raster)
+
+
+#load the pca object
+pca<- readRDS("/OSM/CBR/AF_TERN_MAL_DEB/WORK/datasets/national/rasterdata/reliefdat300000_PCA.rds")
+rownames(pca$rotation)
+#pca<- readRDS("/home/brendo1001/mywork/bowenDrive2/datasets/national/rasterdata/climdat300000_PCA.rds")
+
+#load the raster objects
+load("/OSM/CBR/AF_DIGISCAPESM/work/CoVariates/aus_covariates_stack_RELIEF.RData")
+datF1<- datF[datF$Type=="num",]
+datF1
+
+#tile folders
+dpw<- "/OSM/CBR/AF_DIGISCAPESM/work/CoVariates/tiles/"  #directory pathway
+fols<- as.numeric(list.files(dpw, full.names = FALSE))
+length(fols)
+```
+
+Note above that here we are loading up the numerical rasters related to Relief. We are not necessarily interested in the rasters themselves but the names of the rasters, as we will need these when we go into each tile folder and load up the necessary rasters required to make the PC prediction work without issue. The `datF1` object contains the raster names.
+
+Below is the crux of the spatialisation procedure. below we are setting up 8 cpus to complete the work, and then cycling through each tile, 8 tiles at a time. This configuration works but there could be other alternatives depending on the available compute resources. One could simply ramp up the number of cpus. Depending on the HPC being used and keeping in mind that such compute resources are shared, getting access to such a large compute requirement could take time to get initiated. Alternatively, if we consider the below script as 1 job, we could break it up into multiple jobs by specifying within the `foreach` function via the indexing, which tile folders to work on for each job. With the script below, we are going from tile 1 to tile 2172 in 1 job. We could change this and say run tile 1 to 500 for job 1, then 501 to 1000 for job 2 etc. This spreads to compute load out and makes jobs more attractive for the job scheduler to initiate as the compute requirements are not as great as ordering one large compute requirement. 
+
+```{r spatialise_pca2, echo = TRUE, message=FALSE,eval=FALSE}
+# begin parallel cluster and register it with foreach
+cpus<- 8
+cl<- makeCluster(spec=cpus)
+# register with foreach
+registerDoParallel(cl)
+
+# loop through each tile
+oper1<- foreach(i=1:length(fols), .packages = c("raster", "sp", "rgdal")) %dopar% {
+  
+  # select folder
+  sfol<- fols[i]
+  
+  #get the rasters needed
+  aa<- list.files(path= paste0(dpw,sfol,sep= "/"), pattern = ".tif")
+  bb<- substr(aa, 1, nchar(aa) -4)
+  cc<- match(datF1$ShortName,aa) # match names of the sample data and covariate rasters
+  cc<- cc[complete.cases(cc)]
+  aa<- list.files(path= paste0(dpw,sfol,sep= "/"), pattern = ".tif",full.names = T)
+  aa<- aa[cc]
+  
+  #stack the rasters
+  s1<- stack()
+  for (j in 1:length(aa)){
+    s1<- stack(s1, raster(aa[j]))}
+  s1
+  
+  # check to ensure name and order of rasters are equivalent to those in the pca
+  names(s1)
+  rownames(pca$rotation)
+  
+  # predict the principal components
+  x <- predict(s1, pca, index=1:9) # create new rasters based on PCA predictions #looks like 9 PCS is Ok
+  
+  #write rasters to file
+  for (k in 1:nlayers(x)){
+    r1<- x[[k]]
+    plot(r1)
+    names(r1)<- paste("relief_PCA_", k, sep="")
+    nm1<- paste(paste(paste0(dpw,sfol,"/PCS/Relief",sep= "/"), names(r1), sep=""), ".tif", sep="")
+    writeRaster(r1, filename = nm1, format = "GTiff", datatype = "FLT4S", overwrite = TRUE)}}
+```
+
+As described above, the Rscript also above could be considered as a single job. The concept of job is essentially a set of instructions to give to a HPC job scheduler so that it can allocate to required compute resources and then runs your R script till the job completes. There are few job scheduling systems around and each has there own specific syntax. Some job scheduling systems include [slurm](https://slurm.schedmd.com/) and [pbs](http://www.arc.ox.ac.uk/content/pbs-job-scheduler). The [CSIRO Pearcey Cluster](https://www.csiro.au/en/Research/Technology/Scientific-computing/Pearcey-cluster) uses the slurm job scheduling system. The script below is an example of a slurm script that would provide instructions to the Pearcey HPC to run the above script or 'job'. Essentially we need to specify how much compute resource we need and for how long. We also need to specify which software we need and also the script that we want to run. We also want to write to files and outputs and errors that may occur during the running of out job. When issues with our script occur, these files can be quite handy for addressing any bugs. 
+
+```{r slurm, echo = TRUE, message=FALSE,eval=FALSE}
+#!/bin/bash
+#SBATCH --job-name="relief_PCA_bbox1"
+#SBATCH --time=9:00:00
+#SBATCH --mem=32GB
+#SBATCH --mincpus=8
+#SBATCH --nodes=1
+#SBATCH -o /OSM/CBR/AF_TERN_MAL_DEB/WORK/rcode/rasters/slurm/relief_PCA/relief_PCA_out_bbox1.txt
+#SBATCH -e /OSM/CBR/AF_TERN_MAL_DEB/WORK/rcode/rasters/slurm/relief_PCA/relief_PCA_error_bbox1.txt
+
+module load R/3.2.5
+module load gdal
+module load proj
+Rscript /OSM/CBR/AF_TERN_MAL_DEB/WORK/rcode/rasters/relief_PCA/spatialising_principleComponents_RELIEF_1.R $SLURM_ARRAY_TASK_ID
+
+```
+
+Once we have predicted the PCs for each tile, we then need to mosaic them. This exercise is seemingly simple but is quite a rate limiting step even in comparison to the parallelisation of the PCA prediction which can actually happen very fast. The scrip below shows the mosaicing step in consideration of the 1st PC. One would need to repeat this for each PC in turn or could implement the procedure for each PC in a parallel fashion. 
+
+```{r mosaic, echo = TRUE, message=FALSE,eval=FALSE}
+## Mosaic tiled PC rasters
+library(raster);library(rgdal);library(sp)
+
+# tiles
+fols<- as.numeric(list.files("/OSM/CBR/AF_DIGISCAPESM/work/CoVariates/tiles/"))
+fols<- sort(fols)
+fols
+
+
+### relief pca 1
+raster_list <- list() # initialise the list of rasters
+
+# cycle through each tile folder
+for (i in 1:length(fols)){
+  fpath1<- paste(paste("/OSM/CBR/AF_DIGISCAPESM/work/CoVariates/tiles/", fols[i], sep=""),"/PCS/Relief", sep="")
+  r1<- raster(list.files(fpath1, pattern="relief_PCA_1.tif", full.names=TRUE))
+  raster_list <- append(raster_list, r1)
+}
+
+#raster_list
+raster_list$filename <- "/OSM/CBR/AF_DIGISCAPESM/work/CoVariates/PCS/Relief/relief_PCA_1.tif"
+raster_list$datatype <- "FLT4S"
+raster_list$format <- "GTiff"
+raster_list$overwrite <- TRUE
+raster_list$na.rm <- TRUE
+
+# do the mosaic
+mos <- do.call(merge, raster_list)
+```
+
+[back to top](#top)
+
+## References
