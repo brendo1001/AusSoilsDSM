@@ -67,4 +67,21 @@ predicted.both.true = 100*as.numeric(levels(input.suborder[,1]))[input.suborder[
 goof_both = goofcat(observed = predicted.both.true, predicted = predicted.both)
 saveRDS(goof_both, paste0(root.directory, '/Output/Goof/Goof_both.rds'))
 
-#704_K5_562_1 
+
+#Order with two guess
+complete.index = complete.cases(input)
+predicted = predict(model.ranger, data = input[complete.index,])$predictions
+
+pred.all = predict(model.ranger, data = input[complete.index,], predict.all = T)$predictions
+#Second Prediction
+second.pred = apply(pred.all, 1, function(x){
+  if (sum(is.na(x)) > 0){return(NA)
+  }else {return(sort(x,partial=order.num-1)[order.num-1][[1]])}
+})
+
+replace.index = !(test.true[complete.index] == predicted)
+
+predicted[replace.index] = second.pred[replace.index]
+
+goof_second = goofcat(observed = test.true[complete.index], predicted = predicted)
+saveRDS(goof_o, paste0(root.directory, '/Output/Goof/Goof_order_second.rds')) 
