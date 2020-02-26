@@ -1,6 +1,6 @@
 # AusSoilsDSM
 
-*Under Development*
+*AusSoilsDSM is Under Development*
 
 This repository will hopefully deliver a goto resource for perfroming digital soil mapping in any situation. It will contain:
 - Workflows for doing digital soil mapping
