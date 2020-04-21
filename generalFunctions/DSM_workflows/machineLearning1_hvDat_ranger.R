@@ -79,7 +79,7 @@ plot(ranger.grid)
 
 ## Ranger model simple fit
 # does 1 bootstrapped samples
-ranger.model<-train(x= DSM_data_c[,5:15], y= DSM_data_c$pH60_100cm,method = "ranger",trControl =trainControl(method = "oob"), num.trees = 1000)  
+ranger.model<-train(x= DSM_data_c[,5:15], y= DSM_data_c$pH60_100cm,method = "ranger",trControl =trainControl(method = "cv"), num.trees = 1000)  
 summary(ranger.model)
 ranger.model
 
