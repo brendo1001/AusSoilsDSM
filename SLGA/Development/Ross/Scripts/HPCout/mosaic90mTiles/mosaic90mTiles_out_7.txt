@@ -1,0 +1,4 @@
+[1] "7"
+[1] 7
+[1] "Loading rasters....."
+[1] "Mosaicing....."
