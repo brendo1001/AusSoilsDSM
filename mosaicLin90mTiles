@@ -1,0 +1,3 @@
+#!/bin/sh
+module load R/3.6.1
+/apps/R/3.6.1/lib64/R/bin/Rscript /home/sea084/roper/Scripts/RoperLandSuit/Mapping/RandomForestAttributeMaping_Roper_HPC.R $SLURM_ARRAY_TASK_ID  

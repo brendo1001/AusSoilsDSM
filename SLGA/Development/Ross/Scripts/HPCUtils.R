@@ -15,12 +15,18 @@ library(stringr)
 library(dplyr)
 
 
-showJobLog <- function(){
-  return(getJobLog())
+showJobLog <- function(debugPath){
+  f <- paste0(debugPath, '/JobLog.csv')
+  if(!file.exists(f)){
+    return(paste0('Job log does not exist - ', f))
+  }else{
+    jobLog = read.csv(file=f, stringsAsFactors = F)
+    return(jobLog)
+  }
 }
 
 
-getJobLog <- function(){
+getJobLog <- function(debugPath){
   f <- paste0(debugPath, '/JobLog.csv')
   if(!file.exists(f)){
     jobLog <- data.frame(jobID=character(), jobName=character(), startTime=character(), startIt=numeric(), endIt=numeric(), stringsAsFactors = F)
@@ -30,38 +36,41 @@ getJobLog <- function(){
   return(jobLog)
 }
 
-writeJobLog <- function(jobID, jobName, startTime, startIt, endIt){
- jobLog <- getJobLog()
+writeJobLog <- function(jobID, jobName, startTime, startIt, endIt, debugPath){
+ jobLog <- getJobLog(debugPath)
  jobLog[nrow(jobLog)+1, ] <- c(jobID, jobName, startTime, startIt, endIt )
+ f <- paste0(debugPath, '/JobLog.csv')
+ write.csv(jobLog, file = f, row.names = F )
 }
 
-DeleteDebugFiles <- function(debugPath){
- fls <- list.files(paste0(debugPath), recursive = T, full.names = T)
+DeleteDebugFiles <- function(debugFilesPath){
+ fls <- list.files(paste0(debugFilesPath), recursive = T, full.names = T)
   unlink(fls)
-  print(paste0('Deleted ', length(fls), ' from ', debugPath))
+  print(paste0('Deleted ', length(fls), ' from ', debugFilesPath))
 }
 
 
 
-sendJob <- function(jobName, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, debugPath, jobFileName, deleteDebugFiles=T){
+sendJob <- function(jobName, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, debugPath, arguments='', deleteDebugFiles=T){
   
   jobFileName <- paste0(workingDir,'/', jobName, '.sh')
-  debugPath <- paste0(debugPath,'/', jobName)
-  if(deleteDebugFiles){DeleteDebugFiles(debugPath = debugPath)}
-  if(!dir.exists(paste0(debugPath))){dir.create(paste0(debugPath), recursive = T)}
-  job <- paste0('sbatch --parsable --job-name=', paste0(jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration, ' -o ', debugPath, '/', jobName, '_out_%a.txt -e ', debugPath, '/', jobName, '_error_%a.txt ', jobFileName)
+  debugFilesPath <- paste0(debugPath,'/', jobName)
+  makeJobFile(jobName, workingDir, arguments)
+  if(deleteDebugFiles){DeleteDebugFiles(debugFilesPath = debugFilesPath)}
+  if(!dir.exists(paste0(debugFilesPath))){dir.create(paste0(debugFilesPath), recursive = T)}
+  job <- paste0('sbatch --parsable --job-name=', paste0(jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration, ' -o ', debugPath, '/', jobName, '/', jobName, '_out_%a.txt -e ', debugPath, '/', jobName, '/', jobName, '_error_%a.txt ', jobFileName)
   jobID <- system(job, intern = T)
-  writeJobLog(jobID, jobName, format(Sys.Date(), '%c'), jobStartIteration, jobEndIteration)
+  writeJobLog(jobID, jobName, format(Sys.time(), '%A, %B %d, %Y %H:%M:%S'), jobStartIteration, jobEndIteration, debugPath)
   print(jobID)
   
   return(jobID)
 }
 
-makeJobFile <- function( jobFileName=NULL, workingDir= '', args=''){
-  sfile <-  jobFileName 
+makeJobFile <- function( jobName=NULL, workingDir= '', args=''){
+  sfile <-  paste0(workingDir ,'/', jobName,'.sh')
   cat('#!/bin/sh\n', file = sfile)
   cat('module load R/3.6.1\n', file = sfile, append = T)
-  cat('/apps/R/3.6.1/lib64/R/bin/Rscript /home/sea084/roper/Scripts/RoperLandSuit/Mapping/RandomForestAttributeMaping_Roper_HPC.R $SLURM_ARRAY_TASK_ID ', args, file=sfile, append = T)
+  cat(paste0('/apps/R/3.6.1/lib64/R/bin/Rscript ', workingDir ,'/', jobName,'.R $SLURM_ARRAY_TASK_ID ', args), file=sfile, append = T)
   system(paste0('chmod 755 ', sfile) )
 }
 
@@ -81,9 +90,9 @@ showDebugFile<-function(jobName, type, iteration){
 
 
 
-monitorJob <- function(jobID){
+monitorJob <- function(jobID, debugPath){
   f='go'
-  jl <- getJobLog()
+  jl <- getJobLog(debugPath)
   jrec <- jl[jl$jobID==jobID,]
   tsks <- (jrec$endIt+1) - jrec$startIt
   while (f != 'stop'){
@@ -122,15 +131,15 @@ showFailedJobNos <- function(jobID){
   return(nums)
 }
 
-showNonSuccessfullJobs <- function(jobName){
+showNonSuccessfullJobs <- function(jobName, debugPath){
   
   fls <- list.files(paste0(debugPath, '/', jobName), full.names = T)
   infls <- fls[which(grepl('_out_', fls))]
     
-    ol <- vector(mode = 'character', length = length(fls))
+    ol <- vector(mode = 'character', length = length(infls))
     ol[]<-NA
-    for (i in 1:length(fls)) {
-      f <- fls[i]
+    for (i in 1:length(infls)) {
+      f <- infls[i]
       d <- readLines(f)
       cnt <- which(grepl('Finished Successfully', d))
       if(length(cnt)==0){
@@ -142,8 +151,13 @@ showNonSuccessfullJobs <- function(jobName){
 
 
 
-showCPUs <- function(){
-  d <- system(paste0('sacct -j ', jobID), intern = T)
+showCPUs <- function(jobID=NULL, ident=NULL){
+  if(is.null(jobID)){
+    d <- system(paste0('sacct -u ', ident), intern = T)
+  }else{
+    d <- system(paste0('sacct -j ', jobID), intern = T)
+  }
+  
   d2 <- d[which(grepl('h2', d))]
   running <- which(grepl('RUNNING', d2))
   paste0('There are ', length(running), ' CPUs in use')
@@ -267,46 +281,46 @@ showJobInfo <- function(ident, tnum=10, filter="ALL", fromTime=''){
 #   return(df)
 # }
 
-taskProcessingTimes <- function(outPath, type, att){
-  
-  inDir <- paste0(outPath, '/', type, '/', att)
-  dirs <- list.dirs(inDir, full.names = F, recursive = F)
-  
-  id <- vector(mode = 'numeric', 608)
-  fCount <- vector(mode = 'numeric', 608)
-  stime <- vector(mode = 'character', 608)
-  etime <- vector(mode = 'character', 608)
-  mins <- vector(mode = 'numeric', 608)
-  
-  fls <- list.files(inDir, '*.fst', recursive = T, full.names = F)
-  
-  for (i in 1:608) {
-    print(i)
-    filt <- paste0('_', i, '.fst')
-    b <- fls[which(grepl(filt, fls))]
-    fi <- file.info(paste0(inDir, '/', fls))
-    dif <- max(fi$mtime) - min(fi$mtime)
-    t <- as.numeric(dif, units='mins')
-    
-    id[i] <- i
-    fCount[i] <- length(fls)
-    stime[i] <- as.character(min(fi$mtime))
-    etime[i] <- as.character(max(fi$mtime))
-    mins[i] <- t
-  }
-  
-  df <- data.frame(att, id, fCount, stime, etime, mins, stringsAsFactors = F)
-  return(df)
-}
+# taskProcessingTimes <- function(outPath, type, att){
+#   
+#   inDir <- paste0(outPath, '/', type, '/', att)
+#   dirs <- list.dirs(inDir, full.names = F, recursive = F)
+#   
+#   id <- vector(mode = 'numeric', 608)
+#   fCount <- vector(mode = 'numeric', 608)
+#   stime <- vector(mode = 'character', 608)
+#   etime <- vector(mode = 'character', 608)
+#   mins <- vector(mode = 'numeric', 608)
+#   
+#   fls <- list.files(inDir, '*.fst', recursive = T, full.names = F)
+#   
+#   for (i in 1:608) {
+#     print(i)
+#     filt <- paste0('_', i, '.fst')
+#     b <- fls[which(grepl(filt, fls))]
+#     fi <- file.info(paste0(inDir, '/', fls))
+#     dif <- max(fi$mtime) - min(fi$mtime)
+#     t <- as.numeric(dif, units='mins')
+#     
+#     id[i] <- i
+#     fCount[i] <- length(fls)
+#     stime[i] <- as.character(min(fi$mtime))
+#     etime[i] <- as.character(max(fi$mtime))
+#     mins[i] <- t
+#   }
+#   
+#   df <- data.frame(att, id, fCount, stime, etime, mins, stringsAsFactors = F)
+#   return(df)
+# }
 
 
-getTimeTaken <- function(outPath, type, att, units){
-  fls <- list.files(paste0(outPath, '/', type, '/', att), '*.fst', recursive = T, full.names = T)
-  fi <- file.info(fls)
-  dif <- max(fi$mtime) - min(fi$mtime)
-  t <- as.numeric(dif, units=units)
-  return(t)
-}
+# getTimeTaken <- function(outPath, type, att, units){
+#   fls <- list.files(paste0(outPath, '/', type, '/', att), '*.fst', recursive = T, full.names = T)
+#   fi <- file.info(fls)
+#   dif <- max(fi$mtime) - min(fi$mtime)
+#   t <- as.numeric(dif, units=units)
+#   return(t)
+# }
 
 showAllUsers <- function(){
   d <- system(paste0('squeue'), intern = T)
