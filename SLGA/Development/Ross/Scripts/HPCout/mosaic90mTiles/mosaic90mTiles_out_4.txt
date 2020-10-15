@@ -1,4 +1,0 @@
-[1] "4"
-[1] 4
-[1] "Loading rasters....."
-[1] "Mosaicing....."

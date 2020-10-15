@@ -1,5 +1,0 @@
-[1] "9"
-[1] 9
-[1] "Loading rasters....."
-[1] "Mosaicing....."
-[1] "Finished Successfully"
