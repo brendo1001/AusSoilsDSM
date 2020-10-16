@@ -43,7 +43,7 @@ print(IDField)
 # xField <- 'o_longitude_GDA94'
 # yField <- 'o_latitude_GDA94'
 # training.fieldname <- 'o_asc_ord'
-#IDField <- 'SID'
+# IDField <- 'SID'
 
 #k=500
 

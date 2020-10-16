@@ -111,14 +111,14 @@ monitorJob <- function(jobID, debugPath){
 
 
 showDetails <- function(jobID){
-  d <- system(paste0('sacct -j ', jobID), intern = T)
-  d2 <- d[which(grepl('h2', d))]
-  d3 <-str_trim( gsub("\\s+", " ", d2))
-  df <- read.csv(text=d3, sep = ' ', header = F)
-  df2 <- df[, c(1,2,4,7,8,9,10,11)]
-  colnames(df2) <- c('JobID', 'JobName', 'User', 'Time1', 'Time2', 'Status', 'Memory', 'Node')
+  d <- system(paste0('sacct -j ', jobID, ' -P -X -o jobid%15,jobname,user,start,end,state%30,reqmem,node'), intern = T)
+  #d2 <- d[which(grepl('h2', d))]
+  d3 <-str_trim( gsub("\\s+", " ", d))
+  df <- read.csv(text=d3, sep = '|', header = F)
+  #df2 <- df[, c(1,2,4,7,8,9,10,11)]
+  colnames(df) <- c('JobID', 'JobName', 'User', 'Time1', 'Time2', 'Status', 'Memory', 'Node')
   
-  return(df2)
+  return(df)
 }
 
 showFailedJobNos <- function(jobID){
@@ -146,7 +146,7 @@ showNonSuccessfullJobs <- function(jobName, debugPath){
         ol[i] <- f
       }
     }
-    return(na.omit(ol))
+    return(as.character(na.omit(ol)))
 }
 
 

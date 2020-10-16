@@ -31,7 +31,7 @@ jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='06:00:00', me
 workingDir<- '/datasets/work/af-digiscapesm/work/Ross/SLGA/SLGA/Development/Ross/Scripts/General'
 jobName='drillCovsHPC'
 args <- paste0('/datasets/work/af-digiscapesm/work/Ross/SLGAData/TileDrill/ASCs.csv o_longitude_GDA94 o_latitude_GDA94 o_asc_ord SID')
-jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='00:10:00', memoryGB='8GB', jobStartIteration=1, jobEndIteration=2172, debugPath=debugPath, arguments=args, deleteDebugFiles=T)
+jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='00:10:00', memoryGB='8GB', jobStartIteration=1580, jobEndIteration=1580, debugPath=debugPath, arguments=args, deleteDebugFiles=T)
 
 monitorJob(jobID, debugPath) 
 showCPUs(ident=ident)
@@ -54,8 +54,8 @@ showJobInfo('sea084', 20, 'FAILED')
 showJobInfo('sea084', 20, 'CANCELLED')
 showJobInfo('sea084', 20, 'TIMEOUT')
 
-showDebugFile(jobName = jobName, type='error', iteration = 377)
-showDebugFile(jobName = jobName, type='out', iteration = 95)
+showDebugFile(jobName = jobName, type='error', iteration = 1580)
+showDebugFile(jobName = jobName, type='out', iteration = 1580)
 
 cancelJob(jobID)
 cancelJob('47124435')
