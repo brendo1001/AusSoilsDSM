@@ -1,0 +1,41 @@
+library(raster)
+library(tictoc)
+
+rasterOptions(progress = 'text', memfrac = 0.5)
+
+args = commandArgs(trailingOnly=TRUE)
+
+k = as.numeric(args[1])
+inDir = args[2]
+outDir = args[3]
+print(paste0('K = ', k))
+
+machineName <- as.character(Sys.info()['nodename'])
+
+if(machineName=='TERNSOIL2'){
+  
+  #inDir <- '//fs1-cbr.nexus.csiro.au/{af-tern-mal-deb}/work/datasets/national/covariates/mosaics/30m'
+  #outDir <- '//fs1-cbr.nexus.csiro.au/{af-tern-mal-deb}/work/datasets/national/covariates/mosaics/30m'
+  templatePath <- '//fs1-cbr.nexus.csiro.au/{af-tern-mal-deb}/work/datasets/national/covariates/mosaics/30m/mask30.tif'
+}else{
+  inDir <- '/datasets/work/af-tern-mal-deb/work/Ross/New/Auscover/Tiles/alpsbk_aust_y2009_sd5a2'
+  outDir <- '/datasets/work/af-tern-mal-deb/work/Ross/New/Auscover/TilesResamp/alpsbk_aust_y2009_sd5a2'
+  templatePath <- '/datasets/work/af-tern-mal-deb/work/datasets/national/covariates/mosaics/30m/mask30.tif'
+}
+
+
+
+fls <- list.files(path = paste0(inDir), full.names = T, recursive = F, pattern = '.tif$')
+
+rst <- fls[k]
+n <- basename(rst)
+outfile <- paste0(outDir, '/resamp_', n)
+
+templateR <- raster(templatePath)
+r <- raster(rst)
+r2 <- resample(r, templateR , method='ngb', filename = outfile, datatype='FLT4S', overwrite=T)
+r2<- raster(outfile)
+outfile2 <- paste0(outDir, '/mask_', n)
+rz<- mask(r2, templateR , filename = outfile2, datatype='FLT4S', overwrite=T)
+
+

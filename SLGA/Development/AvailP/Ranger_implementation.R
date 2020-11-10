@@ -6,6 +6,7 @@
 # Uncertainity anaylsis by Bootstrapping
 #
 # Version 0.1 - 22/05/2020 - Orginal script
+# Version 1.0 - 8/10/2020 - Bug with fitControl parameters (final model created using training data only)
 #
 # Required data and format
 # Training data in csv file in TrainingData subdirectory with following column label and order: X, Y, ID, VALUE
@@ -39,45 +40,43 @@ for(i in 2:length(files)){
   r1 <- stack(r1, files [i])
 }
 
-# Extract covariate values at training data point intersections
+# Intersect soil points with covariates
 data_sp <- data
 coordinates(data_sp) <- ~ X + Y
 crs(data_sp) <- CRS('+init=EPSG:4326')
-# Intersect soil points with covariates.
 DSM_data <- raster::extract(r1, data_sp, sp = 1, method = 'simple')
 DSM_data<- as.data.frame(DSM_data)
 setwd(wd)
 write.csv (DSM_data, file ="Site_Covariate_intersect.csv")
-DSM_data <- DSM_data[complete.cases(DSM_data),] ## remove any missing values
 
-## Modelling
-# Establish calibration and validation data sets
-set.seed(123)
-training <- sample(nrow(DSM_data), 0.7 * nrow(DSM_data)) # Vector with training data row numbers
-
+### Modelling
 library(caret)
 library(ranger)
 library(dplyr)
 library(e1071)
 library(gstat)
 
-# Create Bootstrap models directory
-dir.create("Bootstrap")
+dir.create("Bootstrap") # Create Bootstrap models directory
 dir.create("Bootstrap/models")
 GOOFDat <- data.frame(Depths = NA, RMSE = NA, R2 = NA, MAE = NA, MSE = NA) # Summary stats df
 
-# For each depth fit a model
+## For each depth fit a model
+# Establish calibration and validation data sets
 for (d in 1:length(depths)) {
-  cDat <- DSM_data[training, (3+d):(length(files)+3+length(depths))] # Based on number of covariates in ..//mosaic folder 
-  vDat <- DSM_data[-training, (3+d):(length(files)+3+length(depths))] # Based on number of covariates in ..//mosaic folder
-  
-  # Set Ranger (within Caret) control parameters
-  fitControl <- trainControl(method = "cv", number = 10, p = 0.7, returnResamp = "final", verboseIter = FALSE, indexFinal = training) #Ten K-folds
+  set.seed(123)
+  DSM_data_depth <- DSM_data[,c(1:3,3+d,10:(9+length(files)))] # Subset mod data to specfic depth
+  DSM_data_depth <- DSM_data_depth[complete.cases(DSM_data_depth),] 
+  training <- sample(nrow(DSM_data_depth), 0.7 * nrow(DSM_data_depth)) # Vector with training data row numbers
+  cDat <- DSM_data_depth[training, 4:(4+length(files))] # Based on number of covariates in ..//mosaic folder 
+  vDat <- DSM_data_depth[-training, 4:(4+length(files))] # Based on number of covariates in ..//mosaic folder
 
-  # Uncertainity anaylsis using bootstrapping method
+  # Set modelling parameters
   nbag <- 50 # Number of bootstraps
+  fitControl <- trainControl(method = "cv", number = 10, p = 0.7, returnResamp = "final", verboseIter = FALSE, indexFinal = training) #Ten K-folds
+  
+  # Uncertainity anaylsis using bootstrapping method
   dir.create(paste("Bootstrap/models/", depths[d], sep = "")) # Create models subdirectory for each depth
-  TrainDat <- DSM_data[,(3+d):(length(files)+3+length(depths))]
+  TrainDat <- DSM_data_depth[,4:(4+length(files))]
   names(TrainDat)[1] <- "VALUE"
   
   # Fit Ranger (RF) model for each bootstrap
@@ -179,11 +178,11 @@ write.csv(avgMSE, "avgMSE.csv", row.names = FALSE) #Save to file for using in ma
 ## Predict fitted model tile by tile
 # Make a list of tiles from tile folder
 tile <- list.dirs(path = paste(wd, "//Covariates//Tiles", sep = ""), full.names = FALSE, recursive = FALSE)
-dir.create("Bootstrap/map")
+dir.create(paste(wd,"/Bootstrap/map", sep = ""))
 
 # Map tile by tile
 for (t in 1:length(tile)) {
-  dir.create(paste("Bootstrap/map/", tile[t], sep = ""))  
+  dir.create(paste(wd,"/Bootstrap/map/", tile[t], sep = ""))  
   files <- list.files(path = paste(wd, "/Covariates/Tiles/", tile[t], "/", sep = ""), pattern = ".tif", full.names = TRUE, recursive = TRUE)
   
   # Stack covariates for this tile
@@ -194,77 +193,77 @@ for (t in 1:length(tile)) {
   
   # Map each depth of this tile
   for (d in 1:length(depths)) {
-    r.models <- list.files(path = paste(getwd(), "/Bootstrap/models/", depths[d], "/", sep = ""), pattern = "\\.rds$", full.names = TRUE)
-    dir.create(paste("Bootstrap/map/", tile[t], "/", depths[d], sep = "")) # output folder
+    r.models <- list.files(path = paste(getwd(), "/models/", depths[d], "/", sep = ""), pattern = "\\.rds$", full.names = TRUE)
+    dir.create(paste(wd,"/Bootstrap/map/", tile[t], "/", depths[d], sep = "")) # output folder
   
     # Variance of each prediction
     for (i in 1:nbag) {
       fit_ranger <- readRDS(r.models[i])
-      mapFile <- paste(paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "bootMap_", sep = ""), i, sep = ""), ".tif", sep = "")
+      mapFile <- paste(paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "bootMap_", sep = ""), i, sep = ""), ".tif", sep = "")
       predict(t1, fit_ranger, filename = mapFile, format = "GTiff", overwrite = T)
       }
 
     # Determine pixel mean
     # 1. Load pathway to rasters
-    files <- list.files(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), pattern = "bootMap_", full.names = TRUE)
+    files <- list.files(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), pattern = "bootMap_", full.names = TRUE)
     # 2. Stack raster
     m1 <- raster(files[1])
     for (i in 2:length(files)) {
       m1 <- stack(m1, files[i])
       }
     # 3. Calculate mean
-    meanFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "meanPred_", sep = ""), ".tif", sep = "")
+    meanFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "meanPred_", sep = ""), ".tif", sep = "")
     bootMap.mean <- writeRaster(mean(m1), filename = meanFile, format = "GTiff", overwrite = TRUE)
 
     # Estimate variance at each pixel
     # Squared variance at each pixel
     for (i in 1:length(files)) {
       r2 <- raster(files[i])
-      diffFile <- paste(paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "bootAbsDif_", sep = ""), i, sep = ""), ".tif", sep = "")
+      diffFile <- paste(paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "bootAbsDif_", sep = ""), i, sep = ""), ".tif", sep = "")
       jj <- (r2 - bootMap.mean)^2
       writeRaster(jj, filename = diffFile, format = "GTiff", overwrite = TRUE)
       }
 
     # Calculate sum of the squared difference
     # 1. Look for files with BootAbsDif in name
-    files2 <- list.files(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), pattern = "bootAbsDif", full.names = TRUE)
+    files2 <- list.files(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), pattern = "bootAbsDif", full.names = TRUE)
     # 2. Stack rasters
     r3 <- raster(files2[i])
     for (i in 2:length(files2)) {
       r3 <- stack(r3, files2[i])
       }
     # 3. Calculate sum of square differences for each pixel and write to file
-    sqDiffFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "sqDiffPred_", sep = ""), ".tif", sep = "")
+    sqDiffFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "sqDiffPred_", sep = ""), ".tif", sep = "")
     bootMap.sqDiff <- writeRaster(sum(r3), filename = sqDiffFile, format = "GTiff", overwrite = TRUE)
 
     # Calculate variance
-    varFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "varPred_", sep = ""), ".tif", sep = "")
+    varFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "varPred_", sep = ""), ".tif", sep = "")
     bootMap.var <- writeRaster(((1/(nbag - 1)) * bootMap.sqDiff), filename = varFile, format = "GTiff", overwrite = TRUE)
 
     # Calculate overall prediction variance
-    varFile2 <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "varPredF_", sep = ""), ".tif", sep = "")
+    varFile2 <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "varPredF_", sep = ""), ".tif", sep = "")
     bootMap.varF <- writeRaster((bootMap.var + avgMSE), filename = varFile2, format = "GTiff", overwrite = TRUE)
 
     # Determine prediction interval (PI)
     # PI = SD*z(90% probablity interval)
     # SD
-    sdFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "sdPred_", sep = ""), ".tif", sep = "")
+    sdFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "sdPred_", sep = ""), ".tif", sep = "")
     bootMap.sd <- writeRaster(sqrt(bootMap.varF), filename = sdFile, format = "GTiff", overwrite = TRUE)
 
     # z - Standard error (se)
-    seFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "sePred_", sep = ""), ".tif", sep = "")
+    seFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "sePred_", sep = ""), ".tif", sep = "")
     bootMap.se <- writeRaster((bootMap.sd * qnorm(0.95)), filename = seFile, format = "GTiff", overwrite = TRUE)
 
     # Map upper prediction limit
-    uplFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "uplPred_", sep = ""), ".tif", sep = "")
+    uplFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "uplPred_", sep = ""), ".tif", sep = "")
     bootMap.upl <- writeRaster((bootMap.mean + bootMap.se), filename = uplFile, format = "GTiff", overwrite = TRUE)
 
     # Map lower prediction limit
-    lplFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "lplPred_", sep = ""), ".tif", sep = "")
+    lplFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "lplPred_", sep = ""), ".tif", sep = "")
     bootMap.lpl <- writeRaster((bootMap.mean - bootMap.se), filename = lplFile, format = "GTiff", overwrite = TRUE)
 
     # Map prediction interval range
-    pirFile <- paste(paste(paste(getwd(), "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "pirPred_", sep = ""), ".tif", sep = "")
+    pirFile <- paste(paste(paste(wd, "/Bootstrap/map/", tile[t], "/", depths[d], "/", sep = ""), "pirPred_", sep = ""), ".tif", sep = "")
     bootMap.pir <- writeRaster((bootMap.upl - bootMap.lpl), filename = pirFile, format = "GTiff", overwrite = TRUE)
     }
   }
