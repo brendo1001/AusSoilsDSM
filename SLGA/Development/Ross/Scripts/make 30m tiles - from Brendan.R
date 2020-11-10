@@ -52,7 +52,8 @@ for(i in srt:fin){
     tempD <- data.frame(cellNos = seq(1:ncell(test)))
     vals <- as.data.frame(getValues(test))
     tempD <- cbind(tempD, vals)
-    lna<- length(which(is.na(tempD[,2])))}
+    lna<- length(which(is.na(tempD[,2])))
+    }
   if(lna == nrow(tempD)){next} else {
     # make a new directory
     new.dir<- paste0(root.out,i,"/")
@@ -60,6 +61,8 @@ for(i in srt:fin){
     fr <- rasterize(SpP, test)   #rasterise the polygon 
     lr <- mask(x=test, mask=fr) #use the mask 
     lr.reproj <- projectRaster(from = lr, crs = crs(lr), method = "ngb", res = 0.0002777778)
-    writeRaster(x = lr.reproj,filename = paste0(new.dir,"cstone.tif"),format = "GTiff",datatype = "FLT4S", overwrite = TRUE )}}
+    writeRaster(x = lr.reproj,filename = paste0(new.dir,"cstone.tif"),format = "GTiff",datatype = "FLT4S", overwrite = TRUE )
+    }
+  }
 
 

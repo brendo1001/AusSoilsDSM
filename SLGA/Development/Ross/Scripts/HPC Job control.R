@@ -72,7 +72,7 @@ jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='04:00:00', me
 
 jobName='make30mTiles'
 #3672
-jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='02:00:00', memoryGB='1GB', jobStartIteration=1, jobEndIteration=300, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
+jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='05:00:00', memoryGB='5GB', jobStartIteration=1, jobEndIteration=300, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
 
 
@@ -104,7 +104,7 @@ showJobInfo('sea084', 20, 'TIMEOUT')
 
 
 showDebugFile(jobName = jobName, type='error', iteration = 1)
-showDebugFile(jobName = jobName, type='out', iteration = 3)
+showDebugFile(jobName = jobName, type='out', iteration = 1)
 
 
 
