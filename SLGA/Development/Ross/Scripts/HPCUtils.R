@@ -51,14 +51,14 @@ DeleteDebugFiles <- function(debugFilesPath){
 
 
 
-sendJob <- function(jobName, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, debugPath, arguments='', deleteDebugFiles=T){
+sendJob <- function(jobName, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, limit='', debugPath, arguments='', deleteDebugFiles=T){
   
   jobFileName <- paste0(workingDir,'/', jobName, '.sh')
   debugFilesPath <- paste0(debugPath,'/', jobName)
   makeJobFile(jobName, workingDir, arguments)
   if(deleteDebugFiles){DeleteDebugFiles(debugFilesPath = debugFilesPath)}
   if(!dir.exists(paste0(debugFilesPath))){dir.create(paste0(debugFilesPath), recursive = T)}
-  job <- paste0('sbatch --parsable --job-name=', paste0(jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration, ' -o ', debugPath, '/', jobName, '/', jobName, '_out_%a.txt -e ', debugPath, '/', jobName, '/', jobName, '_error_%a.txt ', jobFileName)
+  job <- paste0('sbatch --parsable --job-name=', paste0(jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration,limit, ' -o ', debugPath, '/', jobName, '/', jobName, '_out_%a.txt -e ', debugPath, '/', jobName, '/', jobName, '_error_%a.txt ', jobFileName)
   jobID <- system(job, intern = T)
   writeJobLog(jobID, jobName, format(Sys.time(), '%A, %B %d, %Y %H:%M:%S'), jobStartIteration, jobEndIteration, debugPath)
   print(jobID)
@@ -328,8 +328,20 @@ showAllUsers <- function(){
   d3 <-str_trim( gsub("\\s+", " ", d))
   df <- read.csv(text=d3, sep = ' ', header = T)
   cnts <- as.data.frame(df %>% count(USER))
-  
+  cpus <- sum(cnts$n)
   ocnts <- cnts[order(-cnts$n),]
   return(ocnts)
  
+}
+
+HPCLoad <- function(){
+  d <- system(paste0('squeue'), intern = T)
+  d3 <-str_trim( gsub("\\s+", " ", d))
+  df <- read.csv(text=d3, sep = ' ', header = T)
+  cnts <- as.data.frame(df %>% count(USER))
+  cpus <- sum(cnts$n)
+  load <- (cpus/7600) * 100
+  p <- sprintf(load, fmt = '%#.2f')
+  return(paste0(p, '%'))
+  
 }
