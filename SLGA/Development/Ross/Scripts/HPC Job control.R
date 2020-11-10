@@ -55,7 +55,7 @@ jobName='resWofs'
 jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='10:00:00', memoryGB='10GB', jobStartIteration=1, jobEndIteration=1, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
 jobName='MaskMos2'
-jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='10:00:00', memoryGB='10GB', jobStartIteration=1, jobEndIteration=11, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
+jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='10:00:00', memoryGB='10GB', jobStartIteration=1, jobEndIteration=3, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
 jobName='projWofs'
 jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='50:00:00', memoryGB='10GB', jobStartIteration=1, jobEndIteration=1, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
@@ -67,7 +67,7 @@ jobName='resMos2'
 jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='50:00:00', memoryGB='10GB', jobStartIteration=1, jobEndIteration=3, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
 jobName='setProj'
-jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='04:00:00', memoryGB='10GB', jobStartIteration=1, jobEndIteration=144, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
+jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='03:00:00', memoryGB='5GB', jobStartIteration=1, jobEndIteration=10, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
 
 jobName='make30mTiles'
@@ -77,7 +77,7 @@ jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='05:00:00', me
 
 
 
-# jobID <- '47668370'
+# jobID <- '47682289'
 # jobID <- '47566098'
 #jobID <- '47669788' # processing
 
