@@ -7,10 +7,11 @@ library(stringr)
 df <- read.table('C:/Users/sea084/Dropbox/ProjectAdmin/Covariates/Covariates.csv', header = T, sep = '|')
 
 con <- dbConnect(RSQLite::SQLite(), 'C:/Users/sea084/Dropbox/ProjectAdmin/Covariates/Covariates.sq3')
-dbWriteTable(con, 'Covariates', df)
+
+#dbWriteTable(con, 'Covariates', df)
 
 df <- dbReadTable(con,  'Covariates')
-dbWriteTable(con,  'Covariates2', df)
+#dbWriteTable(con,  'Covariates2', df)
 
 df$OriginalDataset <- str_remove_all(df$OriginalDataset, '#')
 df$MetaDataLink<- str_remove_all(df$MetaDataLink, '#')
@@ -25,8 +26,9 @@ df <- dbReadTable(con,  'Covariates')
 meta <- df$CoVariateName
 df2<-df
 
-nCovsPath <- 'V:/datasets/national/covariates/mosaics'
+nCovsPath <- 'V:/datasets/national/covariates/mosaics/30m/Masked'
 fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
+fls 
 
 # sort out name differences due to Case
 ondsklc<-str_to_lower(str_remove(fls, '.tif'))
@@ -63,4 +65,29 @@ for (i in 1:length(new)) {
 }
 
 
-dbWriteTable(con,  'CovariatesWorking', df3)
+#dbWriteTable(con,  'CovariatesWorking', df3)
+
+
+
+
+
+df <- dbReadTable(con,  'CovariatesWorking')
+meta <- df$CoVariateName
+
+nCovsPath <- 'V:/datasets/national/covariates/mosaics/30m/Masked'
+fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
+fls <- str_remove(fls, '.tif')
+setdiff(fls, df$CoVariateName)
+
+
+nCovsPath90m <- 'V:/datasets/national/covariates/mosaics/90m'
+fls90m <- list.files(nCovsPath90m, pattern = '.tif$', full.names = F, recursive = F)
+write.csv(fls90m, 'V:/datasets/national/covariates/mosaics/90mfls.csv')
+
+in30 <- setdiff(str_to_upper(fls), str_to_upper(fls90m))
+write.csv(in30, 'c:/temp/in30.csv')
+
+in90 <- setdiff(str_to_upper(fls90m), str_to_upper(fls))
+write.csv(in90, 'c:/temp/in90.csv')
+
+
