@@ -35,4 +35,4 @@ TERN covariate tiles in batch mode on the DES HPC.
 **License:** Free to use with acknowledgement.
 
 ## Further detail 
-Coming
+
