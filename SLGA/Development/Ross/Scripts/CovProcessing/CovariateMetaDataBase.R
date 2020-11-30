@@ -74,7 +74,7 @@ for (i in 1:length(new)) {
 df <- dbReadTable(con,  'CovariatesWorking')
 meta <- df$CoVariateName
 
-nCovsPath <- 'V:/datasets/national/covariates/mosaics/30m/Masked'
+nCovsPath <- 'V:/datasets/national/covariates/mosaics/30m/MaskedP'
 fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
 fls <- str_remove(fls, '.tif')
 setdiff(fls, df$CoVariateName)
@@ -89,5 +89,109 @@ write.csv(in30, 'c:/temp/in30.csv')
 
 in90 <- setdiff(str_to_upper(fls90m), str_to_upper(fls))
 write.csv(in90, 'c:/temp/in90.csv')
+
+
+#####  update "isin" 30m mosaics
+dbWriteTable(con,  'CovariatesWorking_V1', df, overwrite = F )
+
+
+nCovsPath <- 'V:/datasets/national/covariates/mosaics/30m/MaskedP'
+fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
+flsq<-paste0("'",fls,"'" )
+ls <- paste(flsq, sep = ' ', collapse = ',')
+sql <- paste0('SELECT * from CovariatesWorking where CoVariateName NOT IN (', ls, ')')
+qry <- dbSendQuery(con, sql)
+res <- dbFetch(qry)
+dbClearResult(qry)
+nrow(res)
+
+upsql <- paste0('UPDATE CovariatesWorking SET X30mMosaic=1 WHERE CoVariateName IN (', ls, ')')
+dbSendQuery(con,upsql)
+upsql <- paste0('UPDATE CovariatesWorking SET X30mMosaic=0 WHERE CoVariateName NOT IN (', ls, ')')
+dbSendQuery(con,upsql)
+             
+
+
+#####  update "isin" 30m mosaics
+dbWriteTable(con,  'CovariatesWorking_V1', df, overwrite = F )
+
+
+nCovsPath <- 'V:/datasets/national/covariates/mosaics/30m/MaskedP'
+fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
+flsq<-paste0("'",fls,"'" )
+ls <- paste(flsq, sep = ' ', collapse = ',')
+sql <- paste0('SELECT * from CovariatesWorking where CoVariateName NOT IN (', ls, ')')
+qry <- dbSendQuery(con, sql)
+res <- dbFetch(qry)
+dbClearResult(qry)
+nrow(res)
+
+upsql <- paste0('UPDATE CovariatesWorking SET X30mMosaic=1 WHERE CoVariateName IN (', ls, ')')
+dbSendQuery(con,upsql)
+upsql <- paste0('UPDATE CovariatesWorking SET X30mMosaic=0 WHERE CoVariateName NOT IN (', ls, ')')
+dbSendQuery(con,upsql)
+
+
+#####  update "isin" 30m Tiles
+upsql <- paste0('UPDATE CovariatesWorking SET X30mTiles=1 WHERE CoVariateName IN (', ls, ')')
+dbSendQuery(con,upsql)
+upsql <- paste0('UPDATE CovariatesWorking SET X30mTiles=0 WHERE CoVariateName NOT IN (', ls, ')')
+dbSendQuery(con,upsql)
+
+
+
+df <- dbReadTable(con,  'CovariatesWorking')
+#####  update "isin" 90m mosaics
+
+nCovsPath <- 'V:/datasets/national/covariates/mosaics/90m'
+fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
+fls <- str_remove(fls, '.tif')
+flsq<-paste0("'",fls,"'" )
+ls <- paste(flsq, sep = ' ', collapse = ',')
+sql <- paste0('SELECT * from CovariatesWorking where CoVariateName IN (', ls, ')')
+qry <- dbSendQuery(con, sql)
+res <- dbFetch(qry)
+dbClearResult(qry)
+nrow(res)
+length(fls)
+
+d1 <- setdiff(fls, df$CoVariateName)
+d1
+d2 <- setdiff(fls, df$CoVariateName)
+d2
+
+upsql <- paste0('UPDATE CovariatesWorking SET X90mMosaic=1 WHERE CoVariateName IN (', ls, ')')
+dbSendQuery(con,upsql)
+upsql <- paste0('UPDATE CovariatesWorking SET X90mMosaic=0 WHERE CoVariateName NOT IN (', ls, ')')
+dbSendQuery(con,upsql)
+
+
+
+#####  update "isin" 90m tiles
+
+nCovsPath <- 'V:/datasets/national/covariates/tiles/208'
+fls <- list.files(nCovsPath, pattern = '.tif$', full.names = F, recursive = F)
+fls <- str_remove(fls, '.tif')
+flsq<-paste0("'",fls,"'" )
+ls <- paste(flsq, sep = ' ', collapse = ',')
+sql <- paste0('SELECT * from CovariatesWorking where CoVariateName IN (', ls, ')')
+qry <- dbSendQuery(con, sql)
+res <- dbFetch(qry)
+dbClearResult(qry)
+nrow(res)
+length(fls)
+
+d1 <- setdiff(fls, df$CoVariateName)
+d1
+d2 <- setdiff(fls, df$CoVariateName)
+d2
+
+upsql <- paste0('UPDATE CovariatesWorking SET X90mTiles=1 WHERE CoVariateName IN (', ls, ')')
+dbSendQuery(con,upsql)
+upsql <- paste0('UPDATE CovariatesWorking SET X90mTiles=0 WHERE CoVariateName NOT IN (', ls, ')')
+dbSendQuery(con,upsql)
+
+
+
 
 
