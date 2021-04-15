@@ -5,6 +5,7 @@
 # Model fitting using 10 K-folds with cross validation, final model fitted to 70% of training data
 # Uncertainty analysis by Bootstrapping
 #
+# Version 1.4 - 15/04/2021 - Fixed bug with variable importance when only one depth present
 # Version 1.3 - 17/03/2021 - Added concordance and bias stats of model fit for both model calibration and validation
 # Version 1.2 - 15/03/2021 - Added variable importance calculation
 # Version 1.1 - 28/01/2021 - Fixed bug with scripts ability to handle variable number of depths (not just the standard GSM depths) in the Training data file.
@@ -17,7 +18,7 @@
 # Covariate tiles in Covariate/Tiles/TitleNumber subdirectory
 #
 ## User inputs
-wd <- "E:\\LASER5" #set working directory
+wd <- "D:\\LASER4" #set working directory
 
 ## Processing starts here #####
 ###library(httr)
@@ -30,7 +31,7 @@ library(sp)
 # Get training data
 td <- paste(wd, "//TrainingData", sep = "")
 setwd(td)
-data <- read.table("TP_Training_Data.csv", header = TRUE, sep = ",")
+data <- read.table("ASRIS.csv", header = TRUE, sep = ",")
 depths <- names(data[-(1:3)]) # List of depths in training data
 
 # Get Covariates for whole modelling area
@@ -209,16 +210,17 @@ for (d in 1:length(depths)) {
   plot(cs, ((colSums(bMat)/nrow(bMat)) * 100), ylab = "PICP", xlab = "Confidence level", main = paste("Depth ", depths[d], sep = ""), abline(0,1), xlim = c(0, 100), ylim = c(0, 100))
   dev.off()
 }
-
 # Summaries variable importance data
-ovi <- ovi[2:7]
-ovi <- setNames(ovi, c(depths[1],depths[2],depths[3],depths[4],depths[5],depths[6]))
+ovi <- ovi[2:(1+length(depths))]
+#ovi <- setNames(ovi, c(depths[1],depths[2],depths[3],depths[4],depths[5],depths[6]))
+for (n in 1:length(depths)) {names(ovi)[n] <- depths[n]} #rename columns
 ovi$Mean <- rowMeans(ovi) # Calculate mean across all depths
 ovi$SD <- rowSds(as.matrix(ovi[,1:length(depths)])) # Calculate standard deviation across all bootstrap models
 ovi$Rank <- (ovi$Mean/ovi$SD) # Calculate Rank based on mean/sd
 ovi <- ovi[order(-ovi$Rank),] # Sort in descending order of importance
 
-GOOFDat <- cbind(calGOOFDat, GOOFDat[2:7]) # Combine calibration and validation stats
+# Combine calibration and validation GOOF data
+GOOFDat <- cbind(calGOOFDat, GOOFDat[2:7])
 
 # Write Goodness of Fit data to file
 setwd(paste(wd, "/Bootstrap/", sep = ""))
