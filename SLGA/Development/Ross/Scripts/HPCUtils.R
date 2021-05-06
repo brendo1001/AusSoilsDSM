@@ -51,14 +51,33 @@ DeleteDebugFiles <- function(debugFilesPath){
 
 
 
-sendJob <- function(jobName, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, limit='', debugPath, arguments='', deleteDebugFiles=T){
+sendJob <- function(jobName, att, depth, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, limit='', debugPath, arguments='', deleteDebugFiles=T){
+  
+  jobFileName <- paste0(workingDir,'/', jobName, '.sh')
+  debugFilesPath <- paste0(debugPath,'/', jobName, '_', att, '_', depth)
+  makeJobFile(jobName, workingDir, arguments)
+  if(deleteDebugFiles){DeleteDebugFiles(debugFilesPath = debugFilesPath)}
+  if(!dir.exists(paste0(debugFilesPath))){dir.create(paste0(debugFilesPath), recursive = T)}
+  of <- paste0(debugPath, '/', jobName, '_', att, '_', depth, '/', jobName, '_', att, '_', depth, '_out_%a.txt')
+  ef <- paste0(debugPath, '/', jobName, '_', att, '_', depth, '/', jobName, '_', att, '_', depth, '_error_%a.txt')
+  job <- paste0('sbatch --parsable --job-name=', paste0(att, depth, jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration,limit, ' -o ', of,' -e ', ef, ' ', jobFileName)
+  jobID <- system(job, intern = T)
+  writeJobLog(jobID, paste0(jobName,  '_', att, '_', depth), format(Sys.time(), '%A, %B %d, %Y %H:%M:%S'), jobStartIteration, jobEndIteration, debugPath)
+  print(jobID)
+  
+  return(jobID)
+}
+
+
+
+sendJob2 <- function(jobName, workingDir, wallTime, memoryGB, jobStartIteration, jobEndIteration, limit='', debugPath, arguments='', deleteDebugFiles=T){
   
   jobFileName <- paste0(workingDir,'/', jobName, '.sh')
   debugFilesPath <- paste0(debugPath,'/', jobName)
   makeJobFile(jobName, workingDir, arguments)
   if(deleteDebugFiles){DeleteDebugFiles(debugFilesPath = debugFilesPath)}
   if(!dir.exists(paste0(debugFilesPath))){dir.create(paste0(debugFilesPath), recursive = T)}
-  job <- paste0('sbatch --parsable --job-name=', paste0(jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration,limit, ' -o ', debugPath, '/', jobName, '/', jobName, '_out_%a.txt -e ', debugPath, '/', jobName, '/', jobName, '_error_%a.txt ', jobFileName)
+  job <- paste0('sbatch --parsable -N 1 --ntasks 1 --exclusive --job-name=', paste0(jobName),' --time=', wallTime, ' --mem=', memoryGB,' -a ', jobStartIteration,'-',jobEndIteration,limit, ' -o ', debugPath, '/', jobName, '/', jobName, '_out_%a.txt -e ', debugPath, '/', jobName, '/', jobName, '_error_%a.txt ', jobFileName)
   jobID <- system(job, intern = T)
   writeJobLog(jobID, jobName, format(Sys.time(), '%A, %B %d, %Y %H:%M:%S'), jobStartIteration, jobEndIteration, debugPath)
   print(jobID)
@@ -77,7 +96,7 @@ makeJobFile <- function( jobName=NULL, workingDir= '', args=''){
 
 showDebugFile<-function(jobName, type, iteration){
   
-  f <- paste0(debugPath, '/', jobName, '/', jobName, '_', type, '_', iteration, '.txt')
+  f <- paste0(debugPath, '/', jobName, '_', att, '_', depth,  '/', jobName, '_', att, '_', depth, '_', type, '_', iteration, '.txt')
   if(!file.exists(f))
   {
     print(paste0('File does not exist - ', f))
@@ -101,7 +120,7 @@ monitorJob <- function(jobID, debugPath){
     d2 <- d[which(grepl('h2', d))]
     completed <- which(grepl('COMPLETED', d2))
     running <- which(grepl('RUNNING', d2))
-    msg <- paste0('There are ', length(running),  ' CPUs in use :  ', length(completed), ' of ', tsks, ' jobs completed')
+    msg <- paste0('There are ', length(running),  ' CPUs in use :  ', length(completed), ' of ', tsks, ' tasks completed')
     cat("\r", "")
     cat("\r", msg)
     Sys.sleep(10)
@@ -160,6 +179,12 @@ showCPUs <- function(jobID=NULL, ident=NULL){
   
   d2 <- d[which(grepl('h2', d))]
   running <- which(grepl('RUNNING', d2))
+  paste0('There are ', length(running), ' CPUs in use')
+}
+
+showCPUs2<-function(ident){
+  d <- system (paste0('squeue -u ', ident), intern = T)
+  running <- which(grepl('R', d))
   paste0('There are ', length(running), ' CPUs in use')
 }
 
@@ -253,7 +278,75 @@ showJobInfo <- function(ident, tnum=10, filter="ALL", fromTime=''){
    return(mdf)
 }
 
-
+showVerboseJobInfo <- function(ident, debugPath='', tnum=10, filter="ALL", fromTime=''){
+  
+  if(nchar(fromTime)>0 ){fromTime = paste0(' -S ', fromTime, ' ') }
+  # limit returned records to date  -S 2020-07-28T10:00:00
+  d <- system(paste( 'sacct -u ', ident, fromTime, ' -P -X -o jobid,start,end,state%30'), intern = T)
+  df <- read.csv(text=d, sep = '|', header = T, stringsAsFactors = F)
+  
+  allids <- str_split(df$JobID, '_')
+  alljobids <- as.character(sapply(allids, function(x) x[1]))
+  alltaskids <- as.character(sapply(allids, function(x) x[2]))
+  df4 <- df[, -1]
+  df3 <- data.frame(JobID=alljobids, TaskID=alltaskids, stringsAsFactors = F)
+  df2 <- cbind(df3, df4)
+  
+  jobIDs <- unique(df2$JobID)
+  jidsToDo <- tail(jobIDs, tnum)
+  
+  sdf <-  data.frame(JOBID=character(), PENDING=character(), COMPLETED=character(), FAILED=character(), 
+                     RUNNING=character(), CANCELLED=character(), TIMEOUT=character(),OUT_OF_MEMORY=character(),stringsAsFactors = F)
+  
+  
+  for (i in 1:length(jidsToDo)) {
+    
+    #showJobLog(debugPath)
+    
+    jid <- jidsToDo[i]
+    jobfil <- df2[which(grepl(jid, df2$JobID)),]
+    cnts <- jobfil %>% group_by(State) %>% tally()
+    
+    #cnts <- as.data.frame(jobfil %>% count(State))
+    p <- cnts[cnts$State=='PENDING',2]
+    if(nrow(p)==0){p=0}
+    c1 <- cnts[cnts$State=='COMPLETED',2]
+    if(nrow(c1)==0){c1=0}
+    f <- cnts[cnts$State=='FAILED',2]
+    if(nrow(f)==0){f=0}
+    r <- cnts[cnts$State=='RUNNING',2]
+    if(nrow(r)==0){r=0}
+    c2 <- cnts[str_detect(cnts$State, 'CANCELLED'),2]
+    if(nrow(c2)==0){c2=0}
+    t <- cnts[str_detect(cnts$State, 'TIMEOUT'),2]
+    if(nrow(t)==0){t=0}
+    m <- cnts[str_detect(cnts$State, 'OUT_OF_MEMORY'),2]
+    if(nrow(m)==0){m=0}
+    sdf <- sdf %>% add_row(JOBID=jid, PENDING=p, COMPLETED=c1, FAILED=f, RUNNING=r, CANCELLED=c2, TIMEOUT=t,OUT_OF_MEMORY=m )
+  }
+  
+  # jl <- showJobLog(tnum)
+  # 
+  # mdf <- merge(sdf, jl, by.x = 'JOBID', by.y = 'JobID')
+  mdf <- sdf
+  of <- str_to_upper(filter)
+  
+  jl <- showJobLog(debugPath)
+  
+  
+  
+  if(!filter=='ALL'){
+    odfv <- merge(jl, mdf, by.x='jobID', by.y='JOBID')
+    odf3 <- odfv[which(odfv[of] > 0),]
+    return(odf3)
+  }else{
+    odfv <- merge(jl, mdf, by.x='jobID', by.y='JOBID')
+    return(odfv)
+  }
+  
+  
+  #return(mdf)
+}
 
 
 # 
@@ -323,10 +416,10 @@ showJobInfo <- function(ident, tnum=10, filter="ALL", fromTime=''){
 # }
 
 showAllUsers <- function(){
-  d <- system(paste0('squeue'), intern = T)
+  d <- system(paste0('squeue -o %i,%u'), intern = T)
   
   d3 <-str_trim( gsub("\\s+", " ", d))
-  df <- read.csv(text=d3, sep = ' ', header = T)
+  df <- read.csv(text=d3, sep = ',', header = T)
   cnts <- as.data.frame(df %>% count(USER))
   cpus <- sum(cnts$n)
   ocnts <- cnts[order(-cnts$n),]
@@ -335,9 +428,9 @@ showAllUsers <- function(){
 }
 
 HPCLoad <- function(){
-  d <- system(paste0('squeue'), intern = T)
+  d <- system(paste0('squeue -o %i,%u'), intern = T)
   d3 <-str_trim( gsub("\\s+", " ", d))
-  df <- read.csv(text=d3, sep = ' ', header = T)
+  df <- read.csv(text=d3, sep = ',', header = T)
   cnts <- as.data.frame(df %>% count(USER))
   cpus <- sum(cnts$n)
   load <- (cpus/7600) * 100

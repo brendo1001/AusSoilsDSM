@@ -1,7 +1,7 @@
 
 library(sp);library(rgdal);library(raster);library(tictoc);library(sf)
 
-rasterOptions(progress = 'text', memfrac = 0.5)
+rasterOptions(progress = 'text', maxmemory = 2147483648)
 
 machineName <- as.character(Sys.info()['nodename'])
 
@@ -26,5 +26,6 @@ fls<- list.files(basePath, recursive = F, full.names = F, pattern = '*.tif$')
 inR <- raster(paste0(basePath, '/', fls[k]))
 outname <- paste0(outDir, '/', fls[k])
 
-crs(inR)<- CRS('+init=EPSG:4326')
+crs(inR)<- CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ')
+
 writeRaster(inR, paste0(outname), overwrite=F)
