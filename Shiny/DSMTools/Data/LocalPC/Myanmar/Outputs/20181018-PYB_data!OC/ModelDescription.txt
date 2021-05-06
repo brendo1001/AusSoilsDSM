@@ -1,0 +1,97 @@
+Model Name : 20181018-PYB_data!OC
+Run on :  2019-03-17 15:20:28
+Run by :  sea084
+Project : Myanmar
+Sample File : 20181018-PYB_data
+Attribute : OC
+Depth : 
+Description : 
+
+
+Training Data
+--------------
+Number of Samples : 3841
+Number of Locations: 791
+Minimum OC value : 0.04
+Maximum OC value : 4.66
+Mean OC value : 0.5230539
+Std Dev of OC values : 0.3404226
+Depth Range : 5 to 85
+
+
+Covariates
+----------
+Aspect
+Convergence_030
+Convergence_060
+Convergence_120
+Convergence_240
+Convergence_480
+Convergence_960
+Curvature_CrossSectional
+Curvature_General
+Curvature_Longitudinal
+DEM_SRTM_Mask_filled_SAGA
+MRRTF_08
+MRRTF_16
+MRVBF_04
+MRVBF_08
+MRVBF_16
+MRVBF_32
+PhysiographicRegions_Mask
+Slope
+SlopeLength
+Terrain_MidSlopePosition
+Terrain_NormalisedHeight
+Terrain_SlopeHeight
+Terrain_StandardisedHeight
+Terrain_ValleyDepth
+TPI_00060_30
+TPI_00090_30
+TPI_00120_30
+TPI_00150_30
+TPI_00180_30
+TPI_00210_30
+TPI_00240_30
+TPI_00270_30
+TPI_00300_30
+TPI_00480_30
+TPI_00600_30
+TPI_00900_30
+TPI_00960_30
+TPI_01200_30
+TPI_01500_30
+TPI_01920_30
+TPI_03000_30
+TPI_03840_30
+TPI_06000_30
+TPI_07680_30
+TPI_09000_30
+TRI
+TWI_SAGA_05
+TWI_SAGA_10
+
+
+Model Parameters
+----------------
+Model Type : Cubist
+Training Method : Simple Random
+Max No. Rules : 25
+Model Extrapolation Threshold : 10
+Number of Folds : 2
+Number of Reps : 2
+
+
+Model Outputs
+----------------
+categoricalCovariates.txt
+inputCovariates.txt
+Model!20181018-PYB_data!OC!ExternalValidation.csv
+Model!20181018-PYB_data!OC!InternalValidation.csv
+Model!20181018-PYB_data!OC!ObsVsMod.csv
+Model!20181018-PYB_data!OC.rds
+Model!20181018-PYB_data!OC.txt
+ModelDescription.txt
+
+
+

@@ -1,0 +1,60 @@
+Model Name : DemoSamples!pH
+Run on :  2019-03-12 05:29:08
+Run by :  sea084
+Project : Demo
+Sample File : DemoSamples
+Attribute : pH
+Depth : 
+Description : 
+
+
+Training Data
+--------------
+Number of Samples : 1203
+Number of Locations: 299
+Minimum pH value : 4.27
+Maximum pH value : 9.9
+Mean pH value : 6.733882
+Std Dev of pH values : 1.029316
+Depth Range : 0 to 1.45
+
+
+Covariates
+----------
+AACN
+Elevation
+Hillshading
+Landsat_Band1
+Light_insolation
+Mid_Slope_Positon
+MRVBF
+NDVI
+Slope
+Terrain_Ruggedness_Index
+TWI
+
+
+Model Parameters
+----------------
+Model Type : Cubist
+Training Method : Simple Random
+Max No. Rules : 25
+Model Extrapolation Threshold : 10
+Number of Folds : 2
+Number of Reps : 2
+
+
+Model Outputs
+----------------
+categoricalCovariates.txt
+inputCovariates.txt
+Maps
+Model!DemoSamples!pH!ExternalValidation.csv
+Model!DemoSamples!pH!InternalValidation.csv
+Model!DemoSamples!pH!ObsVsMod.csv
+Model!DemoSamples!pH.rds
+Model!DemoSamples!pH.txt
+ModelDescription.txt
+
+
+

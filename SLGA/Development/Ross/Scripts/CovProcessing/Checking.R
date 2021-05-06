@@ -1,7 +1,11 @@
 library(raster)
 
-inDir <- 'M:/work/datasets/national/covariates/mosaics/30m/Maskednew'
-inDir <- 'M:/work/datasets/national/covariates/mosaics/30m/Masked'
+inDirP <- 'v:/datasets/national/covariates/mosaics/30m/MaskedP'
+inDir <- 'v:/datasets/national/covariates/mosaics/30m/Masked'
+fls <- list.files(inDir, recursive = FALSE, full.names = F, pattern = ".tif$")
+flsP <- list.files(inDirP, recursive = FALSE, full.names = F, pattern = ".tif$")
+
+setdiff(fls, flsP)
 
 fls <- list.files(inDir, recursive = FALSE, full.names = T, pattern = ".tif$")
 

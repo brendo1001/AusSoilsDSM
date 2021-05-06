@@ -546,18 +546,19 @@ gof <- goof(observed = c(1,2, 3, 4) , predicted = c(1.2, 1.9, 3.3, 3.7) )
 
 
 
+paths <- list.files( paste0('C:/Projects/Myanmar/MarkData'), pattern = paste0('[a-zA-Z0-9\\/_:-]*', '.tif$'), full.names = T, recursive =F)
 
 covDir <- paste0( 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/r4/Covariates' )
 covpaths <- list.files( covDir, pattern = paste0( '_RedRes.tif$'), full.names = T, recursive =F)
-stk <- stack(covpaths)
-
-
+stk <- stack(paths)
+brk <- brick(stk)
+plot(brk)
 raster(covpaths[[6]])
 
 
 
 
-covDir <- paste0( 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/r4/Covariates' )
+covDir <- paste0( 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/p1/Covariates' )
 covpaths <- list.files( covDir, pattern = paste0( '_RedRes.tif$'), full.names = T, recursive =F)
 stk <- stack(covpaths)
 
@@ -612,99 +613,14 @@ dev.off()
 showMethods("plot")
 getMethod("plot", c("Raster", "ANY"))
   
+df <- read.csv('C:/Projects/Myanmar/Samples/samples.csv')
+head(df)
+df['x']
 
-
-paths <- list.files( paste0('C:/Projects/Myanmar/MarkData'), pattern = paste0('[a-zA-Z0-9\\/_:-]*', '.tif$'), full.names = T, recursive =F)
-stk <- stack(paths)
-brk <- brick(stk)
-plot(brk, nc=5, nr=5)
-
-
-
-df <- read.csv('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/r4/Samples/20181018-PYB_data.csv')
-s <- as.data.frame.matrix(summary(df))
-head(s)
-
-
-r <- readRDS('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Brendan/tmpData/r_CoV_11.rds')
-r  
-
-templateR <- raster('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Brendan/GeoTemplate/Template.tif')
-scratchDir <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Brendan/tmpData'
-rpath <- paste0('c:/temp/a.tif')
-modelR <- writeRasterFromFilesSimple(templateR=templateR, rasterDir=scratchDir, outRaster=rpath, outType = 'mean')  
-
-
-
-SoilData <- read.csv('c:/temp/us.csv')
-CurrentSampleDataFields <- names(SoilData)
-head(SoilData)
-coordinates(SoilData) <- ~Longitude + Latitude
-plot(SoilData)
-
-cvstack<- getCovariateStack(input$currentProject)
-covDir <- paste0('C:/Projects/Myanmar/BrendanData')
-covpaths <- list.files( covDir, pattern = paste0( '.tif$'), full.names = T, recursive =F)
-cvstack <- stack(covpaths)
-crs(SoilData) <- crs(cvstack)
-
-DSM_data<- raster::extract(cvstack, SoilData, sp = 1, method = "simple")
-DSM_data <- as.data.frame(DSM_data)
-
-
-
-for (i in 1: length(covpaths)){
-  r <- raster(covpaths[i])
- rp <- reproject(r)
-  plot(rp)
-  outname <- paste0('c:/temp/rp/', basename(covpaths[i]))
-  writeRaster(rp, outname, overwrite = T)
-  
-}
-
-
-r <- raster('C:/Temp/rp/AACN.tif')
-r
-
-
-df <- read.csv('C:/Temp/us.csv')
-flds <- c(1:6)
-atts <- df[, -flds ]
-head(atts)
-str(atts)
-chkn <- which(sapply(atts, is.numeric) )
-
-names(chk[chk==T])
-chki <- which(sapply(atts, is.integer) )
-
-atts[chki] <- lapply(atts[chki], as.numeric)
-
-
-df[!duplicated(df[1:2]),]
-
-
-bdy <- readOGR('C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Demo/GeoTemplate', layer = "Template", GDAL1_integer64_policy = TRUE)
-
-newdf <- read.csv('c:/temp/DemoSamples.csv')
-newdf <- read.csv('c:/temp/us.csv')
-pts <- unique(newdf[c("s_id", "Longitude", "Latitude")])
-head(pts)
-coordinates(pts) <- ~Longitude+Latitude
-
-crs(pts) <- NULL
-crs(bdy) <- NULL
-
-a<-over(pts, bdy)
-sum(na.omit(a))
-
-
-p <- 'C:/Users/sea084/Dropbox/RossRCode/Git/AusSoilsDSM/Shiny/DSMTools/Data/LocalPC/Demo/Outputs/DemoSamples!pH!5/ModelDescription.txt'
-
-l <- readLines(p)
-paste0(l, collapse = '\n')
-
-
-
+v <- summary(df['x'])
+str(v)  
+str(v[,1])
+as.data.frame(v[,1])
 
 
 

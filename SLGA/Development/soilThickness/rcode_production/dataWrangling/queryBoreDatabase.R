@@ -65,6 +65,8 @@ blocs <- dbFetch(result)
 
 cat(paste('BID, HydroCode, Longitude, Latitude, layerNum, upperDepth, lowerDepth, Description, \n'), file = outFileName)
 
+
+p <- 'c:/Code/APSIM/'
 pb <- txtProgressBar(min = 0, max = nrow(blocs), style = 3)
 for (i in 1:nrow(blocs)) {
   

@@ -1,0 +1,96 @@
+Model Name : 20181018-PYB_data!Sand
+Run on :  2018-12-03 15:16:16
+Run by :  sea084
+Project : Myanmar
+Sample File : 20181018-PYB_data
+Attribute : Sand
+Depth : 5
+Description : 
+
+
+Training Data
+--------------
+Number of Samples : 3976
+Number of Locations: 792
+Minimum Sand value : 0
+Maximum Sand value : 100
+Mean Sand value : 46.63939
+Std Dev of Sand values : 18.00594
+Depth Range : 5 to 85
+
+
+Covariates
+----------
+Aspect
+Convergence_030
+Convergence_060
+Convergence_120
+Convergence_240
+Convergence_480
+Convergence_960
+Curvature_CrossSectional
+Curvature_General
+Curvature_Longitudinal
+DEM_SRTM_Mask_filled_SAGA
+MRRTF_08
+MRRTF_16
+MRVBF_04
+MRVBF_08
+MRVBF_16
+MRVBF_32
+PhysiographicRegions_Mask
+Slope
+SlopeLength
+Terrain_MidSlopePosition
+Terrain_NormalisedHeight
+Terrain_SlopeHeight
+Terrain_StandardisedHeight
+Terrain_ValleyDepth
+TPI_00060_30
+TPI_00090_30
+TPI_00120_30
+TPI_00150_30
+TPI_00180_30
+TPI_00210_30
+TPI_00240_30
+TPI_00270_30
+TPI_00300_30
+TPI_00480_30
+TPI_00600_30
+TPI_00900_30
+TPI_00960_30
+TPI_01200_30
+TPI_01500_30
+TPI_01920_30
+TPI_03000_30
+TPI_03840_30
+TPI_06000_30
+TPI_07680_30
+TPI_09000_30
+TRI
+TWI_SAGA_05
+TWI_SAGA_10
+
+
+Model Parameters
+----------------
+Model Type : Cubist
+Training Method : Simple Random
+Max No. Rules : 25
+Model Extrapolation Threshold : 10
+Number of Folds : 2
+Number of Reps : 2
+
+
+Model Outputs
+----------------
+inputCovariates.txt
+Model!20181018-PYB_data!Sand!ExternalValidation.csv
+Model!20181018-PYB_data!Sand!InternalValidation.csv
+Model!20181018-PYB_data!Sand!ObsVsMod.csv
+Model!20181018-PYB_data!Sand.rds
+Model!20181018-PYB_data!Sand.txt
+ModelDescription.txt
+
+
+
