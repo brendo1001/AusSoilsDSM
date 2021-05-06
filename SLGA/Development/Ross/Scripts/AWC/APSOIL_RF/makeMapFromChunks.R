@@ -12,7 +12,8 @@ source(paste0(scriptDir, '/RFUtils.R'))
 
 att = 'DUL'
 depth = '5'
-doUncerts = T
+doMean = T
+doUncerts = F
 
 patt <- paste0(att, '_', depth)
 
@@ -30,8 +31,10 @@ doMapMaking <- function(inDir, outDir, patt, doUncerts, templateR, bs, datatype)
   outRasterM <-   paste0(outDir, '/', patt, '_mean.tif')
   print(paste0("creating - ", outRasterM))
   
-  predR<-raster(templateR)
-  predR<-writeStart(predR,filename=outRasterM,overwrite=TRUE,NAflag=-9999,datatype=datatype)
+  if(doMean){
+    predR<-raster(templateR)
+    predR<-writeStart(predR,filename=outRasterM,overwrite=TRUE,NAflag=-9999,datatype=datatype)
+  }
   
   if(doUncerts){
     predR_U<-raster(templateR)
@@ -49,8 +52,14 @@ doMapMaking <- function(inDir, outDir, patt, doUncerts, templateR, bs, datatype)
     
     if(file.exists(bname)){
       blockVals <- readRDS(bname)
-      b[blockVals[,1]] <- blockVals[,2]
-      predR <- writeValues(predR, b, chk$starts[i])
+      if(all(is.na(blockVals))){
+        print(paste0(i, ' is all NA values'))
+      }
+      
+      if(doMean){
+        b[blockVals[,1]] <- blockVals[,2]
+        predR <- writeValues(predR, b, chk$starts[i])
+      }
       
       if(doUncerts){
         #lower
@@ -66,7 +75,9 @@ doMapMaking <- function(inDir, outDir, patt, doUncerts, templateR, bs, datatype)
     }
   }
   
-  predR<-writeStop(predR)
+  if(doMean){
+    predR<-writeStop(predR)
+  }
   
   if(doUncerts){
     predR_L<-writeStop(predR_L)
