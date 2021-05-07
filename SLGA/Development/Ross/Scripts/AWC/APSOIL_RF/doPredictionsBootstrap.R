@@ -175,6 +175,10 @@ if ( !file.exists(outfile)){
     cat(paste0('Iteration Finished Successfully'))
     
   }else{
+    
+    odf <- data.frame(valsi=numeric(), mean=numeric(), low=numeric(), high=numeric())
+    saveRDS(odf, outfile)
+    
     cat('\nNo data in chunk - ', paste0('cellSummaries_', k, '.rds'))
     cat(paste0('\nIteration Finished Successfully'))
   }

@@ -72,12 +72,12 @@ for (i in 1:length(ds)) {
 
 #att = 'DUL'
 att = 'LL15'
-depth = 0
-depth = 5
-depth = 15
-depth = 30
-depth = 60
-depth = 100
+# depth = 0
+# depth = 5
+# depth = 15
+# depth = 30
+# depth = 60
+ depth = 100
 
 alldf <- read.csv(paste0(rootDir, '/AWC/ApsoilRF/covsDrillApsoil_noNAs.csv'), check.names=FALSE)
 colnames(alldf) <- str_replace_all(colnames(alldf), '[.]', '-')
@@ -92,7 +92,7 @@ alldf <- alldf[, c(1:8, idxs)]
 dSet <- alldf
 head(dSet)
 
-#####  Make bootstraps
+#####  Make bootstraps  - dont do this for different atts use existing bootstraps
 
 
 bootDir <- paste0(rootDir, '/AWC/ApsoilRF/Boots/Depth_', depth)

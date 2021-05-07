@@ -14,53 +14,49 @@ library(rgdal)
 
 source(paste0('/datasets/work/af-digiscapesm/work/Ross/SLGA/SLGA/Development/Ross/Scripts/HPCUtils.R'))
 ident = 'sea084'
-#debugPath <- '/datasets/work/af-digiscapesm/work/Ross/SLGA/SLGA/Development/Ross/Scripts/HPCout'
+
 debugPath <- '/datasets/work/af-digiscapesm/work/Ross/HPCout'
 workingDir<- '/datasets/work/af-digiscapesm/work/Ross/SLGA/SLGA/Development/Ross/Scripts/AWC/APSOIL_RF'
+rootDir2 <- '/datasets/work/af-digiscapesm/work/Ross/TERN/AWC/ApsoilRF'
 
-#templateR <- raster(paste0(covDir, '/Relief_dems_3s_mosaic1.tif'))
-#chk <-	getChunkInfo(20, nrow(templateR))
-
-
-jobName='doPredictions'
-jobID <- sendJob(jobName=jobName, workingDir=workingDir, wallTime='00:30:00', memoryGB='20GB', jobStartIteration=1, jobEndIteration=2040, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
 #jobEndIteration=2040
-jobName='doPredictionsBootstrap'
+
 att='DUL'
 att='LL15'
 depth=0
 depth=5
-#depth=15
-#depth=30
-#depth=60
-#depth=100
+depth=15
+depth=30
+depth=60
+depth=100
 
-
+jobName='doPredictionsBootstrap'
 args=paste0(att, ' ', depth, ' 20 F')
 print(args)
 jobID <- sendJob(jobName=jobName, att=att, depth=depth,  workingDir=workingDir, wallTime='04:00:00', memoryGB='16GB', jobStartIteration=1, jobEndIteration=2040, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=T)
 
-
+#####  fills in missing files after run above if neeeds be
+jobName='doPredictionsBootstrap'
 chks<- 2040
 args=paste0(att, ' ', depth, ' 20 F')
 print(args)
+pb <- txtProgressBar(min=0, max=chks, style=3)
 for (i in 1:chks) {
+  setTxtProgressBar(pb, i)
   f <- paste0(rootDir2, '/Maps/', att, '_', depth, '/Chunks/AllCellVals_', i, '.rds')
-  cat(paste0(i, "_"))
   if(!file.exists(f)){
     print(paste0('Missing - ', f))
     jobID <- sendJob(jobName=jobName, att=att, depth=depth,  workingDir=workingDir, wallTime='04:00:00', memoryGB='16GB', jobStartIteration=i, jobEndIteration=i, limit='', arguments=args, debugPath=debugPath, deleteDebugFiles=F)
-    #print(jobID)
     }
 }
-
+close(pb)
 
 showJobInfo('sea084', 10, 'ALL')
 showVerboseJobInfo('sea084',debugPath, 10, 'ALL')
 showVerboseJobInfo('sea084',debugPath, 10, 'ALL', fromTime = '2021-05-05T08:38:00')
 
-showVerboseJobInfo('sea084',debugPath, 30, 'RUNNING')
+showVerboseJobInfo('sea084',debugPath, 300, 'RUNNING')
 
 monitorJob(jobID, debugPath)
 showCPUs2(ident)
@@ -101,5 +97,5 @@ cancelJob('47785301')
 
 jobID<-'47159401'
 
-showAllUsers()
+head(showAllUsers(), 10)
 HPCLoad()
