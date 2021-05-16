@@ -20,7 +20,7 @@ if(machineName=='TERNSOIL2'){
 }else{
   malRoot <- '/datasets/work/af-tern-mal-deb/work/projects/ternlandscapes_2019/soiltexture/predictions/tiles'
   slgaRoot <- '/datasets/work/af-digiscapesm/work/External/National_digital_soil_property_maps'
-  outRoot <- '/scratch1/sea084/SLGA/AWC'
+  outRoot <- '/datasets/work/af-digiscapesm/work/Ross/TERN/AWC/PedoRasters'
 }
 
 tic()
