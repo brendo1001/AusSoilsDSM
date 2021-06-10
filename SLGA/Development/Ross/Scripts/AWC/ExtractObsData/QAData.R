@@ -16,6 +16,7 @@ ddply(indf, .(SoilSuperGrp), summarize,  BD=mean(BlkDen, na.rm=T), SOC=mean(SOC,
 summary(indf)
 
 
+
 locs <- unique(indf[c("Longitude", "Latitude", "Dataset", "Location_ID")])
 nrow(locs)
 pts <- st_as_sf(locs, coords = c("Longitude", "Latitude"), crs = 4326, na.fail = F)
